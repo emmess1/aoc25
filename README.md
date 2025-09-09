@@ -6,6 +6,41 @@ A focused, well‑documented toolkit of lightweight data structures and algorith
 - Practical APIs with sane defaults and examples
 - Broad coverage of common AoC patterns: grids, graphs, parsing, queues/stacks, heaps, union‑find, ranges, strings, bitmasks, and more
 
+## Table of Contents
+
+- [Quick Start](#quick-start)
+- [Design Principles](#design-principles)
+- [When To Use](#when-to-use)
+- [When Not To Use](#when-not-to-use)
+- Data Structures
+  - [LinkedList](#linkedlist)
+  - [SimpleHashMap](#simplehashmap)
+  - [BstMap (ordered map)](#bstmap-ordered-map)
+  - [DoublyLinkedList](#doublylinkedlist)
+  - [Arrays/Lists (ArrayList)](#arrayslists-arraylist)
+  - [Hash Sets (HashSetExt)](#hash-sets-hashsetext)
+  - [Coordinates (Point, Point3, ComplexI)](#coordinates-point-point3-complexi)
+  - [Sparse Grid (SparseGrid)](#sparse-grid-sparsegrid)
+  - [Neighbor Lookups (DELTAS4/DELTAS8)](#neighbor-lookups-deltas4deltas8)
+  - [Stack / Queue / Deque](#stack--queue--deque)
+  - [Priority Queues / Heaps (MinHeap/MaxHeap)](#priority-queues--heaps-minheapmaxheap)
+  - [Adjacency Lists/Maps (Adjacency)](#adjacency-listsmaps-adjacency)
+  - [Union-Find (DisjointSet)](#union-find-disjointset)
+  - [Topological Sorting](#topological-sorting)
+  - [Intervals/Ranges (Interval, IntervalSet)](#intervalsranges-interval-intervalset)
+  - [Bitmasks (BitMask)](#bitmasks-bitmask)
+  - [Monotonic Queues](#monotonic-queues)
+  - [Dense Grid (DenseGrid2D)](#dense-grid-densegrid2d)
+  - [Indexed Min-Heap (decrease-key)](#indexed-min-heap-decrease-key)
+  - [Frequency Map (FreqMap)](#frequency-map-freqmap)
+  - [String Algorithms](#string-algorithms)
+  - [SCC (Tarjan)](#scc-tarjan)
+  - [Fenwick Tree (BIT)](#fenwick-tree-bit)
+  - [Graph Search Helpers](#graph-search-helpers)
+  - [Parsing Helpers](#parsing-helpers)
+- [Further Reading](#further-reading)
+- [Testing and Coverage](#testing-and-coverage)
+
 ## Quick Start
 
 - Run tests: `cargo test`
@@ -114,16 +149,6 @@ Theory
 
 Practical
 - Use when you need sorted iteration or nearest-key lookups; for strict performance, prefer BTreeMap.
-
-## Testing and Coverage
-
-- Run tests: `cargo test`
-- Source-based coverage (macOS, Xcode tools):
-  - `export RUSTFLAGS="-Cinstrument-coverage"`
-  - `export LLVM_PROFILE_FILE="prof-%p-%m.profraw"`
-  - `cargo test`
-  - `xcrun llvm-profdata merge -sparse prof-*.profraw -o coverage.profdata`
-  - `xcrun llvm-cov report --instr-profile=coverage.profdata -object target/debug/deps/data_structures-<hash> -object target/debug/deps/integration-<hash> -object target/debug/deps/libdata_structures-*.rlib --summary-only`
 
 ## Design Principles
 
@@ -438,3 +463,27 @@ assert_eq!(grid, vec![vec!['a','b'], vec!['c','d']]);
 let nums = parse_ints_whitespace("1 -2 3\n4");
 assert_eq!(nums, vec![1,-2,3,4]);
 ```
+
+## Further Reading
+
+- Overview: https://en.wikipedia.org/wiki/Data_structure
+- Linked list: https://en.wikipedia.org/wiki/Linked_list
+- Hash table: https://en.wikipedia.org/wiki/Hash_table
+- Binary heap: https://en.wikipedia.org/wiki/Binary_heap
+- Disjoint-set (Union–Find): https://en.wikipedia.org/wiki/Disjoint-set_data_structure
+- Topological sorting: https://en.wikipedia.org/wiki/Topological_sorting
+- Tarjan’s SCC: https://en.wikipedia.org/wiki/Tarjan%27s_strongly_connected_components_algorithm
+- Fenwick tree (BIT): https://en.wikipedia.org/wiki/Fenwick_tree
+- Dijkstra’s algorithm: https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm
+- A* search: https://en.wikipedia.org/wiki/A*_search_algorithm
+- KMP string search: https://en.wikipedia.org/wiki/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm
+
+## Testing and Coverage
+
+- Run tests: `cargo test`
+- Source-based coverage (macOS, Xcode tools):
+  - `export RUSTFLAGS="-Cinstrument-coverage"`
+  - `export LLVM_PROFILE_FILE="prof-%p-%m.profraw"`
+  - `cargo test`
+  - `xcrun llvm-profdata merge -sparse prof-*.profraw -o coverage.profdata`
+  - `xcrun llvm-cov report --instr-profile=coverage.profdata -object target/debug/deps/data_structures-<hash> -object target/debug/deps/integration-<hash> -object target/debug/deps/libdata_structures-*.rlib --summary-only`

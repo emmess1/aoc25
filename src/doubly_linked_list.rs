@@ -3,8 +3,17 @@
 //!
 //! - Each node is reference-counted (`Rc`) and interior-mutable (`RefCell`).
 //! - Back-pointers use `Weak` so head/tail chains don't form cycles.
-//! - Elements are stored as `Option<T>` inside the node so we can move them
-//!   out safely while still allowing other `Rc` clones of the node to exist.
+//! - Elements are stored as `Option<T>` inside each node so we can move them
+//!   out safely even if other `Rc` clones of the same node exist.
+//!
+//! Invariants (maintained by all mutation operations):
+//! - `len` equals the number of nodes reachable from `head` via `next`.
+//! - If `head.is_some()` then `head.prev` is `None`; otherwise `tail` is `None`.
+//! - If `tail.is_some()` then `tail.next` is `None`; otherwise `head` is `None`.
+//! - For any adjacent nodes A -> B, `B.prev` is a `Weak` to A, and
+//!   upgrading it yields the same `Rc` as A (while B is in the list).
+//! - For nodes currently in the list, `elem` is `Some(T)`; once structurally
+//!   removed, we `take()` the element, leaving `None` in that node.
 //!
 //! Operations like push/pop at both ends are O(1). Peeking returns a clone
 //! of the element to avoid borrowing lifetimes through RefCell — this keeps
@@ -22,20 +31,29 @@
 //! assert!(dl.is_empty());
 //! ```
 
-use std::cell::{RefCell};
+use std::cell::RefCell;
 use std::rc::{Rc, Weak};
 
+// Strong link to a node in the list. `None` represents the end.
 type Link<T> = Option<Rc<RefCell<Node<T>>>>;
+// Back-pointer from a node to its predecessor. Stored as `Weak` to avoid
+// creating reference cycles between neighbors.
 type WeakLink<T> = Option<Weak<RefCell<Node<T>>>>;
 
+// Internal list node. Not exposed publicly.
 struct Node<T> {
     // Element payload; set to None when moved out during a pop.
     elem: Option<T>,
+    // Strong pointer to the next node.
     next: Link<T>,
+    // Weak pointer to the previous node to prevent reference cycles.
     prev: WeakLink<T>,
 }
 
 /// A doubly linked list supporting O(1) push/pop at both ends.
+///
+/// Cloning of values is required for non-consuming peek/pop helpers to keep
+/// the API lifetime-free and ergonomic with `RefCell`.
 pub struct DoublyLinkedList<T> {
     head: Link<T>,
     tail: Link<T>,
@@ -54,7 +72,7 @@ impl<T> DoublyLinkedList<T> {
     /// Returns number of elements in the list.
     pub fn len(&self) -> usize { self.len }
 
-    /// Pushes an element to the front (head) of the list.
+    /// Pushes an element to the front (head) of the list. O(1).
     pub fn push_front(&mut self, elem: T) {
         let new = Rc::new(RefCell::new(Node { elem: Some(elem), next: self.head.clone(), prev: None }));
         match self.head.take() {
@@ -63,7 +81,7 @@ impl<T> DoublyLinkedList<T> {
                 self.head = Some(new);
             }
             None => {
-                // empty -> head and tail point to new
+                // Empty list: head and tail both point to `new`.
                 self.tail = Some(new.clone());
                 self.head = Some(new);
             }
@@ -71,7 +89,7 @@ impl<T> DoublyLinkedList<T> {
         self.len += 1;
     }
 
-    /// Pushes an element to the back (tail) of the list.
+    /// Pushes an element to the back (tail) of the list. O(1).
     pub fn push_back(&mut self, elem: T) {
         let new = Rc::new(RefCell::new(Node { elem: Some(elem), next: None, prev: None }));
         match self.tail.take() {
@@ -81,7 +99,7 @@ impl<T> DoublyLinkedList<T> {
                 self.tail = Some(new);
             }
             None => {
-                // empty -> head and tail point to new
+                // Empty list: head and tail both point to `new`.
                 self.head = Some(new.clone());
                 self.tail = Some(new);
             }
@@ -93,28 +111,32 @@ impl<T> DoublyLinkedList<T> {
     // requiring unsafe extraction from RefCell-managed nodes. Use
     // `pop_front_cloned` / `pop_back_cloned` or the consuming iterator.
 
-    /// Returns a clone of the front element, if any.
+    /// Returns a clone of the front element, if any. O(1).
     /// Requires `T: Clone`.
     pub fn peek_front(&self) -> Option<T> where T: Clone {
         self.head.as_ref().and_then(|rc| rc.borrow().elem.as_ref().cloned())
     }
 
-    /// Returns a clone of the back element, if any.
+    /// Returns a clone of the back element, if any. O(1).
     /// Requires `T: Clone`.
     pub fn peek_back(&self) -> Option<T> where T: Clone {
         self.tail.as_ref().and_then(|rc| rc.borrow().elem.as_ref().cloned())
     }
 
-    /// Clears the list by popping from the front until empty.
+    /// Clears the list by popping from the front until empty. O(n).
     pub fn clear(&mut self) {
         while self.pop_front_value().is_some() {}
     }
 
-    // Internal helper that pops front and returns owned T without API constraints.
-    // This updates head/prev links then moves the element out of the node.
+    // Internal helper that pops the front node and returns owned `T`.
+    // Steps:
+    // 1) Detach current head from the list and fix neighbor links.
+    // 2) Decrement `len` and update `head`/`tail` as needed.
+    // 3) Move the element out of the node's `RefCell` (leaving `None`).
     fn pop_front_value(&mut self) -> Option<T> {
         let head = self.head.take()?;
-        // take ownership of node by breaking links first
+        // Break links first to ensure list invariants hold even if external
+        // `Rc` clones of this node exist.
         let mut head_b = head.borrow_mut();
         let next = head_b.next.take();
         if let Some(ref n) = next { n.borrow_mut().prev = None; }
@@ -122,15 +144,16 @@ impl<T> DoublyLinkedList<T> {
         self.head = next;
         if self.head.is_none() { self.tail = None; }
         self.len -= 1;
-        // Now unwrap the Rc to extract the element. At this point, there
-        // should be exactly one strong reference (the one we hold), because
-        // we've detached the node from the list structure.
+        // Move the payload out of the node. We do NOT rely on unique `Rc`
+        // ownership here; taking from the `RefCell` is safe even if other
+        // `Rc` clones of the same node still exist elsewhere. Use a local
+        // binding to ensure the mutable borrow ends before `head` is dropped.
         let mut cell = head.borrow_mut();
         cell.elem.take()
     }
 
-    // Internal helper that pops back and returns owned T without API constraints.
-    // This updates tail/next links then moves the element out of the node.
+    // Internal helper that pops the back node and returns owned `T`.
+    // Mirrors `pop_front_value`, fixing neighbor links and draining payload.
     fn pop_back_value(&mut self) -> Option<T> {
         let tail = self.tail.take()?;
         let mut tail_b = tail.borrow_mut();
@@ -141,11 +164,13 @@ impl<T> DoublyLinkedList<T> {
         self.tail = prev.clone();
         if self.tail.is_none() { self.head = None; }
         self.len -= 1;
+        // Same borrow-shortening pattern as in `pop_front_value`.
         let mut cell = tail.borrow_mut();
         cell.elem.take()
     }
 
-    /// Pops and returns the front element by cloning it out (requires `T: Clone`).
+    /// Pops and returns the front element by cloning it out. O(1).
+    /// Requires `T: Clone`.
     pub fn pop_front_cloned(&mut self) -> Option<T> where T: Clone {
         let val = self.peek_front()?;
         // remove front node structurally
@@ -153,7 +178,8 @@ impl<T> DoublyLinkedList<T> {
         Some(val)
     }
 
-    /// Pops and returns the back element by cloning it out (requires `T: Clone`).
+    /// Pops and returns the back element by cloning it out. O(1).
+    /// Requires `T: Clone`.
     pub fn pop_back_cloned(&mut self) -> Option<T> where T: Clone {
         let val = self.peek_back()?;
         let _ = self.pop_back_value();
@@ -161,12 +187,14 @@ impl<T> DoublyLinkedList<T> {
     }
 
     /// Consuming iterator that drains the list by popping from the front.
+    /// Each `next()` is O(1). After consumption the list is empty.
     pub fn into_iter(self) -> IntoIter<T> {
         IntoIter { list: self }
     }
 }
 
 /// An owning iterator that drains the list from front to back.
+/// Holds the list by value and repeatedly removes the head node.
 pub struct IntoIter<T> {
     list: DoublyLinkedList<T>,
 }
