@@ -481,9 +481,16 @@ assert_eq!(nums, vec![1,-2,3,4]);
 ## Testing and Coverage
 
 - Run tests: `cargo test`
-- Source-based coverage (macOS, Xcode tools):
+- cargo-llvm-cov (macOS, using Xcode LLVM):
+  - Install once: `cargo install cargo-llvm-cov`
+  - Point to Xcode LLVM tools:
+    - `export LLVM_COV="$(xcrun --find llvm-cov)"`
+    - `export LLVM_PROFDATA="$(xcrun --find llvm-profdata)"`
+  - DS summary: `cargo cov-ds` (from `.cargo/config.toml`)
+  - DS HTML: `cargo cov-ds-html` (opens report filtered to `src/ds`)
+- Manual source-based coverage (Xcode tools):
   - `export RUSTFLAGS="-Cinstrument-coverage"`
   - `export LLVM_PROFILE_FILE="prof-%p-%m.profraw"`
   - `cargo test`
   - `xcrun llvm-profdata merge -sparse prof-*.profraw -o coverage.profdata`
-  - `xcrun llvm-cov report --instr-profile=coverage.profdata -object target/debug/deps/data_structures-<hash> -object target/debug/deps/integration-<hash> -object target/debug/deps/libdata_structures-*.rlib --summary-only`
+  - `xcrun llvm-cov report --instr-profile=coverage.profdata -object target/debug/aoc25 --summary-only`
