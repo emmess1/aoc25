@@ -93,4 +93,12 @@ mod tests {
         assert_eq!(a.pop(), Some(10));
         assert_eq!(a.pop(), None);
     }
+
+    #[test]
+    fn iter_mut_and_from_vec() {
+        let mut a: ArrayList<i32> = Vec::from([1, 2, 3]).into();
+        // cover iter_mut over the entire collection
+        for x in a.iter_mut() { *x *= 2; }
+        assert_eq!(a.into_vec(), vec![2, 4, 6]);
+    }
 }

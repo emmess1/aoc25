@@ -54,4 +54,12 @@ mod tests {
         assert!(d.is_empty());
         assert_eq!(d.len(), 0);
     }
+
+    #[test]
+    fn queue_len() {
+        let mut q = Queue::new();
+        assert_eq!(q.len(), 0);
+        q.push(1);
+        assert_eq!(q.len(), 1);
+    }
 }

@@ -59,4 +59,12 @@ mod tests {
         h.pop();
         assert_eq!(h.len(), 1);
     }
+
+    #[test]
+    fn len_max_heap() {
+        let mut h = MaxHeap::new();
+        assert_eq!(h.len(), 0);
+        h.push(1); h.push(2);
+        assert_eq!(h.len(), 2);
+    }
 }

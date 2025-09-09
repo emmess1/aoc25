@@ -30,5 +30,12 @@ mod tests {
         assert_eq!(b.count_ones(), 0);
         assert_eq!(b.value(), 0);
     }
-}
 
+    #[test]
+    fn from_and_with_bits() {
+        let b = BitMask::with_bits(0b1010);
+        assert!(b.test(1) && b.test(3));
+        let c: BitMask = 0b11u128.into();
+        assert!(c.test(0) && c.test(1));
+    }
+}

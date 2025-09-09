@@ -120,3 +120,24 @@ pub fn missing() -> Vec<&'static str> {
 
 /// True if all expected behaviors were hit.
 pub fn all_hit() -> bool { missing().is_empty() }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn registry_and_missing_behavior() {
+        // Initially, no hits; missing should list all EXPECTED ids.
+        let m0 = missing();
+        assert_eq!(m0.len(), EXPECTED.len());
+
+        // Hit all expected behaviors to drive missing() to empty and all_hit() to true.
+        for &id in EXPECTED { hit(id); }
+        assert!(all_hit());
+        assert!(missing().is_empty());
+
+        // Snapshot should include at least one of the expected ids.
+        let snap = snapshot();
+        assert!(snap.contains(&EXPECTED[0]));
+    }
+}

@@ -58,4 +58,17 @@ mod tests {
         mq.pop_if(99); // no-op
         assert_eq!(mq.min(), Some(2));
     }
+
+    #[test]
+    fn lens_and_empty() {
+        let mut mq = MonotonicQueueMin::new();
+        assert!(mq.is_empty());
+        mq.push(5);
+        assert_eq!(mq.len(), 1);
+
+        let mut mx = MonotonicQueueMax::new();
+        assert!(mx.max().is_none());
+        mx.push(1); mx.push(2);
+        assert_eq!(mx.max(), Some(2));
+    }
 }

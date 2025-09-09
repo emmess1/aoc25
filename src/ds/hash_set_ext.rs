@@ -30,6 +30,7 @@ impl<T: Eq + Hash> From<StdHashSet<T>> for HashSetExt<T> {
 #[cfg(test)]
 mod tests {
     use super::HashSetExt;
+    use std::collections::HashSet as StdHashSet;
 
     #[test]
     fn basic() {
@@ -49,5 +50,15 @@ mod tests {
         assert!(!s.contains(&42));
         assert_eq!(s.len(), 0);
         assert!(s.is_empty());
+    }
+
+    #[test]
+    fn from_std_set() {
+        let mut stds = StdHashSet::new();
+        stds.insert(1);
+        stds.insert(2);
+        let s: HashSetExt<i32> = stds.into();
+        assert!(s.contains(&1) && s.contains(&2));
+        assert_eq!(s.len(), 2);
     }
 }

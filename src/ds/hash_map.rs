@@ -240,6 +240,18 @@ mod tests {
     }
 
     #[test]
+    fn clear_empties_map() {
+        let mut m = SimpleHashMap::new();
+        for i in 0..8 { m.insert(i, i); }
+        assert!(m.len() > 0);
+        m.clear();
+        assert!(m.is_empty());
+        // clearing again should be idempotent
+        m.clear();
+        assert_eq!(m.len(), 0);
+    }
+
+    #[test]
     fn resizes_and_preserves_entries() {
         let mut m = SimpleHashMap::with_capacity(2);
         // Insert more than load factor threshold to trigger resize

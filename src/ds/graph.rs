@@ -51,4 +51,15 @@ mod tests {
         let nodes: Vec<_> = g.nodes().cloned().collect();
         assert!(nodes.contains(&1));
     }
+
+    #[test]
+    fn add_node_and_undirected() {
+        let mut g = Adjacency::new();
+        g.add_node(1);
+        g.add_undirected(1, 2);
+        let neighbors: Vec<_> = g.neighbors(&1).cloned().collect();
+        assert!(neighbors.contains(&2));
+        let neighbors2: Vec<_> = g.neighbors(&2).cloned().collect();
+        assert!(neighbors2.contains(&1));
+    }
 }

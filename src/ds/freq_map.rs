@@ -40,4 +40,14 @@ mod tests {
         assert_eq!(f.get(&1), 1);
         assert_eq!(f.get(&2), 0);
     }
+
+    #[test]
+    fn is_empty_initial_and_after_ops() {
+        let mut f = FreqMap::new();
+        assert!(f.is_empty());
+        f.inc('z');
+        assert!(!f.is_empty());
+        f.dec(&'z');
+        assert!(f.is_empty());
+    }
 }
