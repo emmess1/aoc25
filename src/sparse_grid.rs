@@ -37,6 +37,10 @@ mod tests {
         g.insert(Point::new(2,3), 9);
         g.insert(Point::new(-1,0), 7);
         assert_eq!(g.len(), 2);
+        // iterate cells
+        let mut seen = 0;
+        for (_p, _v) in g.iter() { seen+=1; }
+        assert_eq!(seen, 2);
         assert_eq!(g.get(&Point::new(2,3)), Some(&9));
         if let Some(v) = g.get_mut(&Point::new(2,3)) { *v += 1; }
         assert_eq!(g.get(&Point::new(2,3)), Some(&10));
@@ -44,6 +48,10 @@ mod tests {
         assert_eq!(b, (-1,2,0,3));
         assert_eq!(g.remove(&Point::new(2,3)), Some(10));
         assert!(g.get(&Point::new(2,3)).is_none());
+        // Removing missing key returns None
+        assert_eq!(g.remove(&Point::new(99,99)), None);
+        // Bounds None when empty
+        let mut g2: SparseGrid<i32> = SparseGrid::new();
+        assert!(g2.bounds().is_none());
     }
 }
-

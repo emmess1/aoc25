@@ -50,5 +50,13 @@ mod tests {
         assert_eq!(h.pop(), Some(1));
         assert!(h.is_empty());
     }
+    #[test]
+    fn len_after_push_pop() {
+        let mut h = MinHeap::new();
+        assert!(h.is_empty());
+        h.push(10); h.push(5);
+        assert_eq!(h.len(), 2);
+        h.pop();
+        assert_eq!(h.len(), 1);
+    }
 }
-

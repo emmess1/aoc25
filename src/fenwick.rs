@@ -1,4 +1,7 @@
 //! Fenwick tree (Binary Indexed Tree) for prefix sums with point updates.
+//!
+//! Use this when you need to query prefix sums and apply point updates in
+//! O(log N). Range sums are built from two prefix sums.
 
 #[derive(Clone, Debug)]
 pub struct Fenwick { n: usize, bit: Vec<i64> }
@@ -23,6 +26,7 @@ mod tests {
         assert_eq!(f.sum_prefix(0), 3);
         assert_eq!(f.sum_prefix(2), 8);
         assert_eq!(f.sum_range(1,3), 5);
+        // empty range should be zero
+        assert_eq!(f.sum_range(3,1), 0);
     }
 }
-

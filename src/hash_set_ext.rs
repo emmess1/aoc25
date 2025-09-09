@@ -42,4 +42,12 @@ mod tests {
         s.clear();
         assert!(s.is_empty());
     }
+
+    #[test]
+    fn empty_contains_len() {
+        let s: HashSetExt<i32> = HashSetExt::new();
+        assert!(!s.contains(&42));
+        assert_eq!(s.len(), 0);
+        assert!(s.is_empty());
+    }
 }

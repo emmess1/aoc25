@@ -88,6 +88,19 @@ mod tests {
         assert_eq!(v.mul_neg_i(), ComplexI::new(0,-1));
     }
     #[test]
+    fn point_ops_and_from() {
+        let p: Point = (1,2).into();
+        assert_eq!(p, Point::new(1,2));
+        assert_eq!(Point::new(1,2) + Point::new(3,4), Point::new(4,6));
+        assert_eq!(Point::new(5,5) - Point::new(2,3), Point::new(3,2));
+    }
+    #[test]
+    fn complex_add_sub() {
+        let a = ComplexI::new(2,3); let b = ComplexI::new(1,1);
+        assert_eq!(a + b, ComplexI::new(3,4));
+        assert_eq!(a - b, ComplexI::new(1,2));
+    }
+    #[test]
     fn point3_neighbors() {
         let p = Point3::new(0,0,0);
         let n6 = p.neighbors6();
@@ -95,5 +108,11 @@ mod tests {
         let n26 = p.neighbors26();
         assert_eq!(n26.len(), 26);
         assert!(n26.contains(&Point3::new(1,1,1)));
+    }
+    #[test]
+    fn point_add_sub() {
+        let a = Point::new(1,1); let b = Point::new(0,2);
+        assert_eq!(a + b, Point::new(1,3));
+        assert_eq!(a - b, Point::new(1,-1));
     }
 }

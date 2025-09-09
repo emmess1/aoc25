@@ -40,6 +40,7 @@ mod tests {
         assert_eq!(q.pop(), Some(1));
         assert_eq!(q.pop(), Some(2));
         assert_eq!(q.pop(), None);
+        assert!(q.is_empty());
     }
     #[test]
     fn deque_basic() {
@@ -51,6 +52,6 @@ mod tests {
         assert_eq!(d.pop_back(), Some(3));
         assert_eq!(d.pop_back(), Some(2));
         assert!(d.is_empty());
+        assert_eq!(d.len(), 0);
     }
 }
-

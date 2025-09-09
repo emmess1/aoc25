@@ -24,6 +24,12 @@ mod tests {
         assert_eq!(s.pop(), Some(2));
         assert_eq!(s.pop(), Some(1));
         assert_eq!(s.pop(), None);
+        assert_eq!(s.len(), 0);
+    }
+
+    #[test]
+    fn peek_empty() {
+        let s: Stack<i32> = Stack::new();
+        assert!(s.peek().is_none());
     }
 }
-

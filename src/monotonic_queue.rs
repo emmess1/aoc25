@@ -51,5 +51,11 @@ mod tests {
         for i in 0..a.len() { mq.push(a[i]); if i>=k-1 { out.push(mq.max().unwrap()); mq.pop_if(a[i+1-k]); } }
         assert_eq!(out, vec![3,3,5,5]);
     }
+    #[test]
+    fn pop_if_noop_when_not_front() {
+        let mut mq = MonotonicQueueMin::new();
+        mq.push(2); mq.push(3); // 2 is front
+        mq.pop_if(99); // no-op
+        assert_eq!(mq.min(), Some(2));
+    }
 }
-

@@ -1,6 +1,8 @@
 //! ArrayList: a thin, well-documented wrapper over `Vec<T>` for AoC-style usage.
 //!
 //! Provides a small API for sequence building, indexed access, slicing, and iteration.
+//! Prefer this when you want a semantically named type and a reduced surface
+//! area for common operations.
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct ArrayList<T> {
@@ -11,7 +13,7 @@ impl<T> ArrayList<T> {
     /// Create an empty list.
     pub fn new() -> Self { Self { inner: Vec::new() } }
 
-    /// Create with capacity.
+    /// Create with capacity (pre-allocates space for `n` elements).
     pub fn with_capacity(n: usize) -> Self { Self { inner: Vec::with_capacity(n) } }
 
     /// Build from an iterator.
@@ -47,7 +49,7 @@ impl<T> ArrayList<T> {
     /// Iterate mutably.
     pub fn iter_mut(&mut self) -> std::slice::IterMut<'_, T> { self.inner.iter_mut() }
 
-    /// Into the inner Vec.
+    /// Consume and return the inner `Vec<T>`.
     pub fn into_vec(self) -> Vec<T> { self.inner }
 }
 
@@ -81,5 +83,14 @@ mod tests {
         let v: Vec<_> = a.iter().cloned().collect();
         assert_eq!(v, vec![0,1,2,3,4]);
     }
-}
 
+    #[test]
+    fn edges() {
+        let mut a = ArrayList::with_capacity(2);
+        assert!(a.is_empty());
+        assert_eq!(a.get(0), None);
+        a.push(10);
+        assert_eq!(a.pop(), Some(10));
+        assert_eq!(a.pop(), None);
+    }
+}
