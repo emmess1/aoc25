@@ -1,0 +1,10 @@
+[alias]
+# DS-only coverage summary (requires: cargo install cargo-llvm-cov)
+cov-ds = "llvm-cov --package aoc25 --ignore-filename-regex '^(?!.*src/ds/).*' --summary-only"
+
+# Open HTML report filtered to src/ds (requires cargo-llvm-cov)
+cov-ds-html = "llvm-cov --package aoc25 --ignore-filename-regex '^(?!.*src/ds/).*' --open"
+
+# Run functional coverage tests
+fcov = "test --test functional_coverage"
+
