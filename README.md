@@ -15,6 +15,8 @@ A focused, well‑documented toolkit of lightweight data structures and algorith
 use data_structures::*; // or bring specific items you need
 ```
 
+- See also: [Cheatsheet.md](./Cheatsheet.md) for a quick mapping of problems → tools
+
 ## LinkedList
 
 A minimal singly linked list with O(1) front operations.
