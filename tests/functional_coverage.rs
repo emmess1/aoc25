@@ -205,8 +205,8 @@ fn functional_coverage_all_ds() {
     let _ = parse_ints_whitespace("1 -2"); fcov::hit("parse_ints_ws");
 
     // Final assertion: all expected behaviors hit
-    if !fcov::all_hit() {
-        let missing = fcov::missing();
+    let missing = fcov::missing();
+    if !missing.is_empty() {
         panic!("Functional coverage missing: {:?}", missing);
     }
 }
