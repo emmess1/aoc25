@@ -53,6 +53,63 @@ pub const EXPECTED: &[&str] = &[
     "bst_remove_one_right",
     "bst_remove_two_children_immediate_succ",
     "bst_remove_two_children_succ_with_right",
+    // DoublyLinkedList
+    "dll_push_front_back",
+    "dll_pop_and_iter",
+    // ArrayList
+    "arr_push_pop",
+    // BitMask
+    "bit_set_toggle",
+    // Coords / Points
+    "coords_neighbors",
+    // DenseGrid2D
+    "dense_neighbors",
+    // Disjoint Set Union
+    "dsu_union_find",
+    // Fenwick tree
+    "fenwick_sum_range",
+    // FreqMap
+    "freq_inc_dec",
+    // Graph adjacency
+    "graph_indegrees",
+    // HashSetExt
+    "hset_insert_contains",
+    // Heaps
+    "heap_min",
+    "heap_max",
+    // IndexedMinHeap
+    "idxheap_decrease_key",
+    // Intervals
+    "interval_merge",
+    "interval_set_merge",
+    // Monotonic queues
+    "mono_min",
+    "mono_max",
+    // Neighbor deltas
+    "deltas4_8",
+    // Queue / Deque
+    "queue_fifo",
+    "deque_ops",
+    // SCC (Tarjan)
+    "scc_tarjan",
+    // Search helpers
+    "bfs_dist",
+    "dijkstra",
+    "astar",
+    // SparseGrid
+    "sparse_bounds",
+    // Stack
+    "stack_lifo",
+    // String algorithms
+    "kmp_found",
+    "z_func",
+    "rolling_hash",
+    // Topological sort
+    "topo_sort_ok",
+    "topo_detect_cycle",
+    // Parsing helpers
+    "parse_grid_chars",
+    "parse_ints_ws",
 ];
 
 /// Return which expected ids are still missing.
