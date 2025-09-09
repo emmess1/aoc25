@@ -6,7 +6,7 @@
 //!   Dijkstra and A* correctness (typical AoC constraints).
 //! - A* requires an admissible (non-overestimating) heuristic `h`.
 
-use crate::indexed_heap::IndexedMinHeap;
+use crate::ds::indexed_heap::IndexedMinHeap;
 use std::collections::VecDeque;
 
 /// BFS distances from `start` in an unweighted directed graph.

@@ -4,7 +4,7 @@
 //! grid is small-to-medium and mostly populated; prefer `SparseGrid` when the
 //! coordinate space is large and mostly empty.
 
-use crate::coords::Point;
+use crate::ds::coords::Point;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DenseGrid2D<T> { w: usize, h: usize, data: Vec<T> }

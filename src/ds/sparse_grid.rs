@@ -1,7 +1,7 @@
 //! Sparse grid representation keyed by coordinates.
 
 use std::collections::HashMap;
-use crate::coords::Point;
+use crate::ds::coords::Point;
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct SparseGrid<T> {

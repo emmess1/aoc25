@@ -1,6 +1,6 @@
 //! Neighbor deltas for 4- and 8-directional movement.
 
-use crate::coords::Point;
+use crate::ds::coords::Point;
 
 pub const DELTAS4: [Point; 4] = [
     Point { x: 1, y: 0 }, Point { x: -1, y: 0 }, Point { x: 0, y: 1 }, Point { x: 0, y: -1 },
@@ -19,4 +19,3 @@ mod tests {
         assert!(DELTAS8.contains(&Point { x: -1, y: -1 }));
     }
 }
-
