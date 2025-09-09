@@ -1,4 +1,4 @@
-use data_structures::{LinkedList, SimpleHashMap, BstMap};
+use aoc25::{LinkedList, SimpleHashMap, BstMap};
 
 #[test]
 fn integrated_usage_strings_and_ints() {

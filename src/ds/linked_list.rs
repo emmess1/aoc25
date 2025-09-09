@@ -10,7 +10,7 @@
 //!
 //! Example
 //! ```
-//! use data_structures::LinkedList;
+//! use aoc25::LinkedList;
 //!
 //! let mut ll = LinkedList::new();
 //! ll.push_front(2);
@@ -44,7 +44,7 @@ impl<T> LinkedList<T> {
     ///
     /// Example
     /// ```
-    /// use data_structures::LinkedList;
+    /// use aoc25::LinkedList;
     /// let ll: LinkedList<i32> = LinkedList::new();
     /// assert!(ll.is_empty());
     /// ```
@@ -62,7 +62,7 @@ impl<T> LinkedList<T> {
     ///
     /// Example
     /// ```
-    /// use data_structures::LinkedList;
+    /// use aoc25::LinkedList;
     /// let mut ll = LinkedList::new();
     /// ll.push_front(1);
     /// assert_eq!(ll.peek(), Some(&1));
@@ -81,7 +81,7 @@ impl<T> LinkedList<T> {
     ///
     /// Example
     /// ```
-    /// use data_structures::LinkedList;
+    /// use aoc25::LinkedList;
     /// let mut ll = LinkedList::new();
     /// ll.push_front(1);
     /// assert_eq!(ll.pop_front(), Some(1));

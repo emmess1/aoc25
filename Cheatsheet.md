@@ -85,19 +85,19 @@ Quick mappings from common AoC problems to the data structures and helpers in th
 ## Tiny Patterns
 - BFS skeleton (unweighted)
 ```rust
-use data_structures::bfs_distances;
+use aoc25::bfs_distances;
 let n = adj.len();
 let dist = bfs_distances(n, &adj, start);
 ```
 - Sliding window min (size k)
 ```rust
-use data_structures::MonotonicQueueMin;
+use aoc25::MonotonicQueueMin;
 let mut mq = MonotonicQueueMin::new();
 let mut out = Vec::new();
 for i in 0..a.len() { mq.push(a[i]); if i>=k-1 { out.push(mq.min().unwrap()); mq.pop_if(a[i+1-k]); } }
 ```
 - Dijkstra
 ```rust
-use data_structures::dijkstra_indexed;
+use aoc25::dijkstra_indexed;
 let (dist, _prev) = dijkstra_indexed(n, &adj_w, start);
 ```

@@ -47,7 +47,7 @@ A focused, well‑documented toolkit of lightweight data structures and algorith
 - Explore examples inline in this README and rustdoc for each module
 - Typical import:
 ```rust
-use data_structures::*; // or bring specific items you need
+use aoc25::*; // or bring specific items you need
 ```
 
 - See also: [Cheatsheet.md](./Cheatsheet.md) for a quick mapping of problems → tools
@@ -68,7 +68,7 @@ Practical
 
 Example
 ```rust
-use data_structures::LinkedList;
+use aoc25::LinkedList;
 
 let mut ll = LinkedList::new();
 ll.push_front("c");
@@ -95,7 +95,7 @@ A basic hash map using separate chaining (`Vec<Vec<(K, V)>>`) and a power-of-two
 
 Example
 ```rust
-use data_structures::SimpleHashMap;
+use aoc25::SimpleHashMap;
 
 let mut map = SimpleHashMap::new();
 assert_eq!(map.insert("a", 1), None);     // new key
@@ -128,7 +128,7 @@ An ordered map backed by an unbalanced BST. Keys must implement `Ord`. In the wo
 
 Example
 ```rust
-use data_structures::BstMap;
+use aoc25::BstMap;
 
 let mut tm = BstMap::new();
 tm.insert(5, "five");
@@ -182,7 +182,7 @@ A safe doubly linked list implemented with `Rc<RefCell<...>>` forward links and 
 
 Example
 ```rust
-use data_structures::DoublyLinkedList;
+use aoc25::DoublyLinkedList;
 
 let mut dl = DoublyLinkedList::new();
 dl.push_front(2);
@@ -211,7 +211,7 @@ Thin wrapper over `Vec<T>` with slicing and iteration helpers.
 
 Example
 ```rust
-use data_structures::ArrayList;
+use aoc25::ArrayList;
 let mut a = ArrayList::from_iter(0..5);
 assert_eq!(a.slice(1..3), &[1,2]);
 ```
@@ -228,7 +228,7 @@ Convenience wrapper over `HashSet` for fast membership tests.
 
 Example
 ```rust
-use data_structures::HashSetExt;
+use aoc25::HashSetExt;
 let mut s = HashSetExt::new();
 s.insert("state");
 assert!(s.contains(&"state"));
@@ -246,7 +246,7 @@ Practical
 
 Example
 ```rust
-use data_structures::{Point, Point3};
+use aoc25::{Point, Point3};
 let p = Point { x: 0, y: 0 };
 let n4 = p.neighbors4();
 let p3 = Point3::new(0,0,0);
@@ -265,7 +265,7 @@ Dictionary keyed by coordinates for large, mostly empty grids.
 
 Example
 ```rust
-use data_structures::{SparseGrid, Point};
+use aoc25::{SparseGrid, Point};
 let mut g = SparseGrid::new();
 g.insert(Point::new(2,3), 9);
 ```
@@ -435,7 +435,7 @@ Practical
 
 Examples
 ```rust
-use data_structures::{bfs_distances, dijkstra_indexed, astar_indexed};
+use aoc25::{bfs_distances, dijkstra_indexed, astar_indexed};
 let n=4; let mut adj=vec![vec![];n]; adj[0]=vec![1,2]; adj[1]=vec![3]; adj[2]=vec![3];
 let dist = bfs_distances(n, &adj, 0);
 assert_eq!(dist, vec![0,1,1,2]);
@@ -457,7 +457,7 @@ assert_eq!((cost, path), (5, vec![0,1,2,3]));
 
 Examples
 ```rust
-use data_structures::{parse_grid_chars, parse_ints_whitespace};
+use aoc25::{parse_grid_chars, parse_ints_whitespace};
 let grid = parse_grid_chars("ab\ncd\n");
 assert_eq!(grid, vec![vec!['a','b'], vec!['c','d']]);
 let nums = parse_ints_whitespace("1 -2 3\n4");

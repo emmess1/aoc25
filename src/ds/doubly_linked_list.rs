@@ -21,7 +21,7 @@
 //!
 //! Example
 //! ```
-//! use data_structures::DoublyLinkedList;
+//! use aoc25::DoublyLinkedList;
 //! let mut dl = DoublyLinkedList::new();
 //! dl.push_front(2);
 //! dl.push_front(1);

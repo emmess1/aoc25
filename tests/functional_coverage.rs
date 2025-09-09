@@ -1,4 +1,4 @@
-use data_structures::*;
+use aoc25::*;
 use std::hash::{Hash, Hasher};
 
 #[test]
@@ -182,6 +182,41 @@ fn functional_coverage_all_ds() {
     fcov::hit("dijkstra");
     let h = |_u:usize| 0; let _ = astar_indexed(n, &gw, 0, 1, &h);
     fcov::hit("astar");
+
+    // Ensure hits for map resize and BST behaviors to avoid test order races
+    // SimpleHashMap resize
+    let mut hm3 = SimpleHashMap::with_capacity(2);
+    for i in 0..64 { hm3.insert(i, i); }
+    for i in 0..64 { assert_eq!(hm3.get(&i), Some(&i)); }
+    fcov::hit("hm_resize");
+
+    // BstMap behaviors
+    let mut bst = BstMap::new();
+    for k in [5, 3, 7] { bst.insert(k, k*10); }
+    fcov::hit("bst_insert");
+    assert!(bst.get_mut(&2).is_none());
+    fcov::hit("bst_get_mut_miss_left");
+    assert!(bst.get_mut(&9).is_none());
+    fcov::hit("bst_get_mut_miss_right");
+    bst.insert(2, 20);
+    assert_eq!(bst.remove(&2), Some(20));
+    fcov::hit("bst_remove_leaf");
+    let mut bst2 = BstMap::new();
+    for k in [5, 3, 2, 7] { bst2.insert(k, k); }
+    assert_eq!(bst2.remove(&3), Some(3));
+    fcov::hit("bst_remove_one_left");
+    let mut bst3 = BstMap::new();
+    for k in [5, 3, 4, 7] { bst3.insert(k, k); }
+    assert_eq!(bst3.remove(&3), Some(3));
+    fcov::hit("bst_remove_one_right");
+    let mut bst4 = BstMap::new();
+    for k in [5, 3, 6, 2, 4, 7] { bst4.insert(k, k); }
+    assert_eq!(bst4.remove(&5), Some(5));
+    fcov::hit("bst_remove_two_children_immediate_succ");
+    let mut bst5: BstMap<String, i32> = BstMap::new();
+    for k in ["5", "3", "7", "2", "4", "6", "6a"] { bst5.insert(k.to_string(), 1); }
+    assert_eq!(bst5.remove(&"5".to_string()), Some(1));
+    fcov::hit("bst_remove_two_children_succ_with_right");
 
     // SparseGrid
     let mut sg: SparseGrid<i32> = SparseGrid::new(); sg.insert(Point::new(0,0), 1); let _ = sg.bounds();

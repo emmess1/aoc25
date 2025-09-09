@@ -30,7 +30,7 @@ impl<K: Eq + Hash, V> SimpleHashMap<K, V> {
     ///
     /// Example
     /// ```
-    /// use data_structures::SimpleHashMap;
+    /// use aoc25::SimpleHashMap;
     /// let m: SimpleHashMap<&str, i32> = SimpleHashMap::new();
     /// assert!(m.is_empty());
     /// ```
@@ -94,7 +94,7 @@ impl<K: Eq + Hash, V> SimpleHashMap<K, V> {
     ///
     /// Example
     /// ```
-    /// use data_structures::SimpleHashMap;
+    /// use aoc25::SimpleHashMap;
     /// let mut m = SimpleHashMap::new();
     /// assert_eq!(m.insert("a", 1), None);
     /// assert_eq!(m.insert("a", 2), Some(1));
@@ -120,7 +120,7 @@ impl<K: Eq + Hash, V> SimpleHashMap<K, V> {
     ///
     /// Example
     /// ```
-    /// use data_structures::SimpleHashMap;
+    /// use aoc25::SimpleHashMap;
     /// let mut m = SimpleHashMap::new();
     /// m.insert("k", 1);
     /// assert_eq!(m.get(&"k"), Some(&1));
@@ -135,7 +135,7 @@ impl<K: Eq + Hash, V> SimpleHashMap<K, V> {
     ///
     /// Example
     /// ```
-    /// use data_structures::SimpleHashMap;
+    /// use aoc25::SimpleHashMap;
     /// let mut m = SimpleHashMap::new();
     /// m.insert("k", 1);
     /// if let Some(v) = m.get_mut(&"k") { *v += 1; }

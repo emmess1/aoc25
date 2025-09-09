@@ -12,7 +12,7 @@
 //!
 //! Example
 //! ```
-//! use data_structures::BstMap;
+//! use aoc25::BstMap;
 //! let mut m = BstMap::new();
 //! m.insert(2, "two");
 //! m.insert(1, "one");
@@ -56,7 +56,7 @@ impl<K: Ord, V> BstMap<K, V> {
     ///
     /// Example
     /// ```
-    /// use data_structures::BstMap;
+    /// use aoc25::BstMap;
     /// let mut m = BstMap::new();
     /// assert_eq!(m.insert(5, "a"), None);
     /// assert_eq!(m.insert(5, "b"), Some("a"));
@@ -89,7 +89,7 @@ impl<K: Ord, V> BstMap<K, V> {
     ///
     /// Example
     /// ```
-    /// use data_structures::BstMap;
+    /// use aoc25::BstMap;
     /// let mut m = BstMap::new();
     /// m.insert(1, "x");
     /// assert_eq!(m.get(&1), Some(&"x"));
@@ -111,7 +111,7 @@ impl<K: Ord, V> BstMap<K, V> {
     ///
     /// Example
     /// ```
-    /// use data_structures::BstMap;
+    /// use aoc25::BstMap;
     /// let mut m = BstMap::new();
     /// m.insert(1, 10);
     /// if let Some(v) = m.get_mut(&1) { *v += 1; }
@@ -139,7 +139,7 @@ impl<K: Ord, V> BstMap<K, V> {
     ///
     /// Example
     /// ```
-    /// use data_structures::BstMap;
+    /// use aoc25::BstMap;
     /// let mut m = BstMap::new();
     /// m.insert(1, "x");
     /// assert_eq!(m.remove(&1), Some("x"));
