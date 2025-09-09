@@ -87,11 +87,8 @@ fn functional_coverage_end_to_end() {
     assert_eq!(bst5.remove(&"5".to_string()), Some(1));
     fcov::hit("bst_remove_two_children_succ_with_right");
 
-    // Final assertion: all expected behaviors hit
-    if !fcov::all_hit() {
-        let missing = fcov::missing();
-        panic!("Functional coverage missing: {:?}", missing);
-    }
+    // Note: full functional coverage assertion is performed in
+    // `functional_coverage_all_ds` after exercising all modules.
 }
 
 #[test]
@@ -207,5 +204,9 @@ fn functional_coverage_all_ds() {
     let _ = parse_grid_chars("ab\n"); fcov::hit("parse_grid_chars");
     let _ = parse_ints_whitespace("1 -2"); fcov::hit("parse_ints_ws");
 
-    // Do not assert here; the other test checks all_hit at the end.
+    // Final assertion: all expected behaviors hit
+    if !fcov::all_hit() {
+        let missing = fcov::missing();
+        panic!("Functional coverage missing: {:?}", missing);
+    }
 }
