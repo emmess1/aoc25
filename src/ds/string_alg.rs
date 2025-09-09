@@ -44,7 +44,6 @@ pub fn z_function(s: &str) -> Vec<usize> {
 /// Simple rolling hash for fast substring hashing (base/mod pair).
 #[derive(Clone, Debug)]
 pub struct RollingHash {
-    base: u64,
     modu: u64,
     pref: Vec<u64>,
     pow: Vec<u64>,
@@ -55,7 +54,7 @@ impl RollingHash {
         let mut pref = vec![0; n+1];
         let mut pow = vec![1; n+1];
         for (i,&b) in s.as_bytes().iter().enumerate() { pref[i+1] = (pref[i]*base + b as u64) % modu; pow[i+1] = (pow[i]*base) % modu; }
-        Self { base, modu, pref, pow }
+        Self { modu, pref, pow }
     }
     /// Hash of substring s[l..r) (0-based, exclusive r).
     pub fn hash(&self, l: usize, r: usize) -> u64 {
@@ -81,4 +80,3 @@ mod tests {
         assert_ne!(h.hash(0,3), h.hash(1,4));
     }
 }
-
