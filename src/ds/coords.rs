@@ -115,4 +115,12 @@ mod tests {
         assert_eq!(a + b, Point::new(1,3));
         assert_eq!(a - b, Point::new(1,-1));
     }
+
+    #[test]
+    fn point3_add_sub() {
+        let a = Point3::new(1,2,3);
+        let b = Point3::new(-1,0,2);
+        assert_eq!(a + b, Point3::new(0,2,5));
+        assert_eq!(a - b, Point3::new(2,2,1));
+    }
 }

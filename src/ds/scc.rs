@@ -43,5 +43,14 @@ mod tests {
         comps.sort_by_key(|c| c[0]);
         assert_eq!(comps, vec![vec![0,1,2], vec![3], vec![4]]);
     }
-}
 
+    #[test]
+    fn covers_cross_edge_case() {
+        // Create a finished SCC {0,1,2} and an extra node 3 with an edge to 0.
+        // When exploring 3 after {0,1,2} is completed, the edge 3->0 hits
+        // the branch where index[v] is Some and onstack[v] is false.
+        let mut adj = vec![vec![1], vec![2], vec![0], vec![0]];
+        let comps = tarjan_scc(&adj);
+        assert_eq!(comps.len(), 2);
+    }
+}
