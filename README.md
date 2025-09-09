@@ -143,3 +143,123 @@ assert_eq!(dl.pop_back_cloned(), Some(3));
 let v: Vec<_> = dl.into_iter().collect();
 // remaining elements drained front-to-back
 ```
+## Arrays/Lists (ArrayList)
+
+Thin wrapper over `Vec<T>` with slicing and iteration helpers.
+
+Example
+```rust
+use data_structures::ArrayList;
+let mut a = ArrayList::from_iter(0..5);
+assert_eq!(a.slice(1..3), &[1,2]);
+```
+
+## Hash Sets (HashSetExt)
+
+Convenience wrapper over `HashSet` for fast membership tests.
+
+Example
+```rust
+use data_structures::HashSetExt;
+let mut s = HashSetExt::new();
+s.insert("state");
+assert!(s.contains(&"state"));
+```
+
+## Coordinates (Point, Point3, ComplexI)
+
+2D/3D points with neighbor methods; simple complex integer for rotations.
+
+Example
+```rust
+use data_structures::{Point, Point3};
+let p = Point { x: 0, y: 0 };
+let n4 = p.neighbors4();
+let p3 = Point3::new(0,0,0);
+let n6 = p3.neighbors6();
+```
+
+## Sparse Grid (SparseGrid)
+
+Dictionary keyed by coordinates for large, mostly empty grids.
+
+Example
+```rust
+use data_structures::{SparseGrid, Point};
+let mut g = SparseGrid::new();
+g.insert(Point::new(2,3), 9);
+```
+
+## Neighbor Lookups (DELTAS4/DELTAS8)
+
+Predefined 4- and 8-direction deltas for movement on grids.
+
+## Stack / Queue / Deque
+
+Stack<T>, Queue<T> and Deque<T> for parsing, BFS, and sliding windows.
+
+## Priority Queues / Heaps (MinHeap/MaxHeap)
+
+Binary-heap wrappers for taking smallest/largest next item.
+
+## Adjacency Lists/Maps (Adjacency)
+
+Directed adjacency with neighbor/indegree helpers.
+
+## Union-Find (DisjointSet)
+
+Connectivity queries and merges in near-constant amortized time.
+
+## Topological Sorting
+
+`topo_sort` and `Topo` builder for DAG ordering.
+
+## Intervals/Ranges (Interval, IntervalSet)
+
+Inclusive ranges with merging and membership.
+
+## Bitmasks (BitMask)
+
+Compact u128-backed state with bit operations.
+
+## Monotonic Queues
+
+`MonotonicQueueMin/Max` for sliding window min/max in O(N).
+
+## Dense Grid (DenseGrid2D)
+
+Efficient 2D array with bounds and neighbor iteration.
+
+## Indexed Min-Heap (decrease-key)
+
+`IndexedMinHeap` for Dijkstra/A* with updatable priorities.
+
+## Frequency Map (FreqMap)
+
+Multiset of counts with remove-on-zero semantics.
+
+## String Algorithms
+
+KMP search, Z-function, and a simple RollingHash.
+
+## SCC (Tarjan)
+
+Tarjan’s algorithm returning components as node index lists.
+
+## Fenwick Tree (BIT)
+
+Prefix sums with point updates and range queries in O(log N).
+
+## Graph Search Helpers
+
+- `bfs_distances(n, &adj, start)` → Vec<i64> distances
+- `dfs_preorder(n, &adj, start)` → Vec<usize> preorder
+- `dijkstra_indexed(n, &adj_w, start)` → (dist, prev)
+- `astar_indexed(n, &adj_w, start, goal, h)` → (cost, path)
+
+## Parsing Helpers
+
+- `parse_grid_chars(&str)` → Vec<Vec<char>>
+- `parse_grid_digits(&str)` → Vec<Vec<i64>>
+- `parse_ints_whitespace(&str)` → Vec<i64>
+- `parse_lines_i64(&str)` → Vec<i64>
