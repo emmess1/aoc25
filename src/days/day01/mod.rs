@@ -87,6 +87,10 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
     if let Some(options) = animation_options_from_env() {
         extras::animation::animate_from_input(&input, options)?;
     }
+    if let Some(path) = web_animation_path_from_env() {
+        extras::web::write_animation_html(&path, &input)?;
+        eprintln!("Day01 web animation written to {}", path);
+    }
     println!("Day 01\nPart 1: {}\nPart 2: {}", part1(&input), part2(&input));
     Ok(())
 }
@@ -122,6 +126,13 @@ fn animation_options_from_env() -> Option<extras::animation::AnimationOptions> {
         opts.clear_screen = toggle;
     }
     Some(opts)
+}
+
+fn web_animation_path_from_env() -> Option<String> {
+    std::env::var("DAY01_ANIMATE_WEB")
+        .ok()
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty())
 }
 
 #[cfg(test)]
