@@ -2,3 +2,4 @@
 
 pub mod visualize;
 pub mod visualize_part2;
+pub mod regex_solvers;
