@@ -18,6 +18,8 @@
 //! applies once we know the valid `x` range for each (block length, repeats)
 //! pair.
 
+pub mod extras;
+
 use super::util;
 
 pub fn part1(input: &str) -> String {
@@ -32,6 +34,14 @@ pub fn part2(input: &str) -> String {
 
 pub fn run() -> Result<(), Box<dyn std::error::Error>> {
     let input = util::read_input("day02")?;
+    if should_render_part1_visual() {
+        let report = extras::visualize::render_part1_report(&input);
+        println!("Day 02 Part 1 visualization:\n{}", report);
+    }
+    if should_render_part2_visual() {
+        let report = extras::visualize_part2::render_part2_report(&input);
+        println!("Day 02 Part 2 visualization:\n{}", report);
+    }
     println!("Day 02\nPart 1: {}\nPart 2: {}", part1(&input), part2(&input));
     Ok(())
 }
@@ -222,6 +232,28 @@ fn num_digits(mut n: u128) -> usize {
         digits += 1;
     }
     digits
+}
+
+fn should_render_part1_visual() -> bool {
+    std::env::var("DAY02_PART1_VIS")
+        .map(|v| {
+            !matches!(
+                v.trim().to_ascii_lowercase().as_str(),
+                "" | "0" | "false" | "off" | "no"
+            )
+        })
+        .unwrap_or(false)
+}
+
+fn should_render_part2_visual() -> bool {
+    std::env::var("DAY02_PART2_VIS")
+        .map(|v| {
+            !matches!(
+                v.trim().to_ascii_lowercase().as_str(),
+                "" | "0" | "false" | "off" | "no"
+            )
+        })
+        .unwrap_or(false)
 }
 
 #[cfg(test)]
