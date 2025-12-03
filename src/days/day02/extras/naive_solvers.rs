@@ -1,6 +1,7 @@
 //! Extremely naive Part 1/Part 2 solvers that operate via brute force string
 //! comparisons. These are intentionally slow and suitable only for toy inputs
 //! or explanatory purposes.
+#![allow(dead_code)]
 
 use super::super::parse_ranges;
 

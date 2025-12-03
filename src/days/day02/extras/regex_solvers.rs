@@ -6,6 +6,7 @@
 //! while remaining compatible with the crate's feature set. The solver is
 //! intentionally naive (iterating every ID) and best suited for explanation
 //! or verification with smaller inputs.
+#![allow(dead_code)]
 
 use regex::Regex;
 
