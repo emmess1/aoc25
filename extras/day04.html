@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Day 04 Forklift Visualizer</title>
+<style>
+    :root {
+        color-scheme: dark;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: #030712;
+        color: #e5edf6;
+    }
+    body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        padding: 2rem 1rem 3rem;
+        box-sizing: border-box;
+    }
+    main {
+        width: min(960px, 100%);
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    h1 {
+        font-size: clamp(1.5rem, 2vw + 1rem, 2.2rem);
+        margin-bottom: 0.25rem;
+    }
+    .intro {
+        color: #94a3b8;
+        line-height: 1.5;
+    }
+    textarea {
+        width: 100%;
+        min-height: 180px;
+        border-radius: 12px;
+        padding: 0.75rem 1rem;
+        background: #0f172a;
+        color: inherit;
+        border: 1px solid #1e293b;
+        resize: vertical;
+        font-family: "JetBrains Mono", "SFMono-Regular", ui-monospace, "Cascadia Code", monospace;
+        font-size: 0.95rem;
+        line-height: 1.4;
+    }
+    .panel {
+        background: #040b16;
+        border-radius: 14px;
+        padding: 1.25rem;
+        box-shadow: 0 18px 45px rgba(2, 6, 23, 0.8);
+        border: 1px solid #0f172a;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        align-items: center;
+    }
+    button {
+        border: none;
+        border-radius: 999px;
+        padding: 0.55rem 1.4rem;
+        font-weight: 600;
+        cursor: pointer;
+        background: #38bdf8;
+        color: #021019;
+    }
+    button.secondary {
+        background: #1e293b;
+        color: #e2e8f0;
+    }
+    button:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+    label {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.9rem;
+        color: #cbd5f5;
+    }
+    input[type=range] {
+        width: 160px;
+    }
+    canvas {
+        width: 100%;
+        max-height: 520px;
+        border-radius: 16px;
+        background: #020617;
+        box-shadow: inset 0 0 0 1px #0f172a;
+    }
+    .stats {
+        font-variant-numeric: tabular-nums;
+        color: #cbd5f5;
+    }
+    .legend {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        font-size: 0.9rem;
+        color: #94a3b8;
+    }
+    .legend span,
+    .speed-control {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+    .swatch {
+        width: 14px;
+        height: 14px;
+        border-radius: 4px;
+        display: inline-block;
+    }
+</style>
+</head>
+<body>
+<main>
+    <header>
+        <h1>Day 04 · Forklift Removal Visualizer</h1>
+        <p class="intro">
+            Paste your grid of rolls (@) and floor (.) below, then watch forklifts repeatedly remove any roll
+            that has fewer than four neighbors. This mirrors the Part&nbsp;2 simulation and shows how the
+            accessible frontier peels away until no rolls remain.
+        </p>
+    </header>
+    <section class="panel">
+        <textarea id="input"></textarea>
+        <div class="controls">
+            <button id="load">Load Grid</button>
+            <button id="toggle" class="secondary">Start</button>
+            <button id="step" class="secondary">Step</button>
+            <button id="reset" class="secondary">Reset</button>
+            <label class="speed-control">Speed
+                <input id="speed" type="range" min="1" max="200" value="30"/>
+                <span id="speedValue">30/s</span>
+            </label>
+        </div>
+        <div class="legend">
+            <span><span class="swatch" style="background:#38bdf8"></span> Roll</span>
+            <span><span class="swatch" style="background:#facc15"></span> Accessible now</span>
+            <span><span class="swatch" style="background:#f87171"></span> Just removed</span>
+            <span><span class="swatch" style="background:#0f172a"></span> Empty / floor</span>
+        </div>
+        <div class="stats" id="stats">Load a grid to begin.</div>
+        <canvas id="grid" width="600" height="400"></canvas>
+    </section>
+</main>
+<script>
+(() => {
+    'use strict';
+
+    const exampleInput = [
+        '..@@.@@@@.',
+        '@@@.@.@.@@',
+        '@@@@@.@.@@',
+        '@.@@@@..@.',
+        '@@.@@@@.@@',
+        '.@@@@@@@.@',
+        '.@.@.@.@@@',
+        '@.@@@.@@@@',
+        '.@@@@@@@@.',
+        '@.@.@@@.@.'
+    ].join('\n');
+
+    const textarea = document.getElementById('input');
+    const loadBtn = document.getElementById('load');
+    const toggleBtn = document.getElementById('toggle');
+    const stepBtn = document.getElementById('step');
+    const resetBtn = document.getElementById('reset');
+    const speedInput = document.getElementById('speed');
+    const speedValue = document.getElementById('speedValue');
+    const statsEl = document.getElementById('stats');
+    const canvas = document.getElementById('grid');
+    const ctx = canvas.getContext('2d');
+
+    textarea.value = exampleInput;
+
+    let state = null;
+    let lastLoaded = exampleInput;
+    let running = false;
+    let lastTimestamp = 0;
+    let stepAccumulator = 0;
+
+    function normalizeInput(raw) {
+        if (raw.includes('\n')) {
+            return raw;
+        }
+        if (raw.includes('\\n')) {
+            return raw
+                .replace(/\\r\\n/g, '\n')
+                .replace(/\\n/g, '\n');
+        }
+        return raw;
+    }
+
+    function parseGrid(raw) {
+        const normalized = normalizeInput(raw);
+        const lines = normalized.split(/\r?\n/).map(line => line.trimEnd()).filter(Boolean);
+        if (!lines.length) {
+            throw new Error('Please provide at least one non-empty line.');
+        }
+        const grid = lines.map(line => [...line].map(ch => ch === '@'));
+        const height = grid.length;
+        const width = Math.max(...grid.map(row => row.length));
+        if (!width) {
+            throw new Error('Grid lines must contain "." or "@".');
+        }
+        return { grid, width, height };
+    }
+
+    function countNeighbors(grid, y, x) {
+        let neighbors = 0;
+        for (let dy = -1; dy <= 1; dy += 1) {
+            for (let dx = -1; dx <= 1; dx += 1) {
+                if (dx === 0 && dy === 0) continue;
+                const ny = y + dy;
+                const nx = x + dx;
+                if (ny < 0 || ny >= grid.length) continue;
+                if (nx < 0 || nx >= grid[ny].length) continue;
+                if (grid[ny][nx]) neighbors += 1;
+            }
+        }
+        return neighbors;
+    }
+
+    function initializeSimulation(raw) {
+        const { grid, width, height } = parseGrid(raw);
+        const neighborCounts = grid.map((row, y) =>
+            row.map((cell, x) => (cell ? countNeighbors(grid, y, x) : 0))
+        );
+        const accessible = grid.map(row => row.map(() => false));
+        const queue = [];
+        let total = 0;
+
+        for (let y = 0; y < height; y += 1) {
+            for (let x = 0; x < grid[y].length; x += 1) {
+                if (!grid[y][x]) continue;
+                total += 1;
+                if (neighborCounts[y][x] < 4) {
+                    queue.push({ y, x });
+                    accessible[y][x] = true;
+                }
+            }
+        }
+
+        state = {
+            grid,
+            neighborCounts,
+            accessible,
+            queue,
+            width,
+            height,
+            total,
+            removed: 0,
+            lastRemoved: null
+        };
+        running = false;
+        stepAccumulator = 0;
+        toggleBtn.textContent = 'Start';
+        updateCanvasSize();
+        render();
+        updateStats();
+    }
+
+    function performStep() {
+        if (!state) return false;
+        while (state.queue.length) {
+            const cell = state.queue.shift();
+            const { y, x } = cell;
+            if (!state.grid[y][x]) {
+                state.accessible[y][x] = false;
+                continue;
+            }
+            if (state.neighborCounts[y][x] >= 4) continue;
+
+            state.grid[y][x] = false;
+            state.accessible[y][x] = false;
+            state.lastRemoved = { y, x };
+            state.removed += 1;
+
+            for (let dy = -1; dy <= 1; dy += 1) {
+                for (let dx = -1; dx <= 1; dx += 1) {
+                    if (dx === 0 && dy === 0) continue;
+                    const ny = y + dy;
+                    const nx = x + dx;
+                    if (ny < 0 || ny >= state.height) continue;
+                    if (nx < 0 || nx >= state.grid[ny].length) continue;
+                    if (!state.grid[ny][nx]) continue;
+                    state.neighborCounts[ny][nx] -= 1;
+                    if (state.neighborCounts[ny][nx] < 4 && !state.accessible[ny][nx]) {
+                        state.queue.push({ y: ny, x: nx });
+                        state.accessible[ny][nx] = true;
+                    }
+                }
+            }
+            return true;
+        }
+        state.lastRemoved = null;
+        running = false;
+        toggleBtn.textContent = 'Start';
+        return false;
+    }
+
+    function updateStats(message) {
+        if (message) {
+            statsEl.textContent = message;
+            return;
+        }
+        if (!state) {
+            statsEl.textContent = 'Load a grid to begin.';
+            return;
+        }
+        const accessibleCount = state.accessible.reduce((total, row, y) => {
+            return total + row.reduce((rowTotal, isAccessible, x) => {
+                return rowTotal + (isAccessible && state.grid[y][x] ? 1 : 0);
+            }, 0);
+        }, 0);
+        statsEl.textContent =
+            `Rolls: ${state.total} · Removed: ${state.removed} · Remaining: ${state.total - state.removed} ` +
+            `· Accessible now: ${accessibleCount} · Queue length: ${state.queue.length}`;
+    }
+
+    function updateCanvasSize() {
+        if (!state) return;
+        const maxCells = Math.max(state.width, state.height);
+        const cellSize = Math.max(6, Math.floor(600 / Math.max(10, maxCells)));
+        canvas.width = state.width * cellSize;
+        canvas.height = state.height * cellSize;
+        canvas.dataset.cellSize = cellSize;
+    }
+
+    function render() {
+        ctx.fillStyle = '#020617';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        if (!state) return;
+        const cellSize = Number(canvas.dataset.cellSize || 12);
+        const padding = 1;
+        for (let y = 0; y < state.height; y += 1) {
+            for (let x = 0; x < state.width; x += 1) {
+                const exists = x < state.grid[y].length;
+                if (!exists) continue;
+                const hasRoll = state.grid[y][x];
+                const isAccessible = hasRoll && state.accessible[y][x];
+                let color = '#0f172a';
+                if (hasRoll) color = '#38bdf8';
+                if (isAccessible) color = '#facc15';
+                if (state.lastRemoved && state.lastRemoved.x === x && state.lastRemoved.y === y) {
+                    color = '#f87171';
+                }
+                ctx.fillStyle = color;
+                ctx.fillRect(
+                    x * cellSize + padding,
+                    y * cellSize + padding,
+                    cellSize - padding * 2,
+                    cellSize - padding * 2
+                );
+            }
+        }
+    }
+
+    function animationLoop(timestamp) {
+        const delta = timestamp - lastTimestamp;
+        lastTimestamp = timestamp;
+        if (running && state) {
+            const stepsPerSecond = Number(speedInput.value);
+            stepAccumulator += (delta / 1000) * stepsPerSecond;
+            const stepsToRun = Math.floor(stepAccumulator);
+            if (stepsToRun >= 1) {
+                for (let i = 0; i < stepsToRun; i += 1) {
+                    if (!performStep()) break;
+                }
+                stepAccumulator -= stepsToRun;
+                updateStats();
+                render();
+            }
+        }
+        requestAnimationFrame(animationLoop);
+    }
+
+    loadBtn.addEventListener('click', () => {
+        try {
+            lastLoaded = textarea.value;
+            initializeSimulation(lastLoaded);
+            updateStats('Grid loaded. Press Start to animate or Step to advance manually.');
+        } catch (err) {
+            updateStats(err.message);
+        }
+    });
+
+    resetBtn.addEventListener('click', () => {
+        try {
+            initializeSimulation(lastLoaded);
+            updateStats('Simulation reset.');
+        } catch (err) {
+            updateStats(err.message);
+        }
+    });
+
+    toggleBtn.addEventListener('click', () => {
+        if (!state) return;
+        running = !running;
+        toggleBtn.textContent = running ? 'Pause' : 'Start';
+    });
+
+    stepBtn.addEventListener('click', () => {
+        if (!state) return;
+        const progressed = performStep();
+        updateStats(progressed ? undefined : 'No more accessible rolls. Reload to replay.');
+        render();
+    });
+
+    speedInput.addEventListener('input', () => {
+        speedValue.textContent = `${speedInput.value}/s`;
+    });
+
+    initializeSimulation(exampleInput);
+    requestAnimationFrame(animationLoop);
+})();
+</script>
+</body>
+</html>
