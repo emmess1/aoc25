@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Day 09 · Seat Rectangle Explorer</title>
+<style>
+    :root {
+        color-scheme: dark;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: #01030a;
+        color: #e2e8f0;
+    }
+    * {
+        box-sizing: border-box;
+    }
+    body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        padding: 2rem 1rem 3rem;
+    }
+    main {
+        width: min(1100px, 100%);
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    h1 {
+        font-size: clamp(1.5rem, 2.4vw + 1rem, 2.6rem);
+        margin: 0 0 0.25rem;
+    }
+    .intro {
+        color: #94a3b8;
+        line-height: 1.6;
+        margin: 0;
+    }
+    .panel {
+        background: #030712;
+        border-radius: 18px;
+        padding: 1.5rem;
+        border: 1px solid #0f172a;
+        box-shadow: 0 25px 55px rgba(2, 6, 23, 0.7);
+    }
+    textarea {
+        width: 100%;
+        min-height: 160px;
+        border-radius: 14px;
+        border: 1px solid #1e293b;
+        background: #020617;
+        color: inherit;
+        padding: 0.85rem 1rem;
+        resize: vertical;
+        font-family: "JetBrains Mono", "SFMono-Regular", ui-monospace, "Cascadia Code", monospace;
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+    .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    button {
+        border: none;
+        border-radius: 999px;
+        padding: 0.55rem 1.3rem;
+        font-weight: 600;
+        cursor: pointer;
+        background: #38bdf8;
+        color: #021019;
+    }
+    button.secondary {
+        background: #1f2937;
+        color: #e2e8f0;
+    }
+    button:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+    }
+    .status {
+        margin-top: 0.85rem;
+        font-size: 0.95rem;
+        color: #94a3b8;
+    }
+    .status.error {
+        color: #f87171;
+    }
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    .stat {
+        background: #040b18;
+        border: 1px solid #0f1a2a;
+        border-radius: 14px;
+        padding: 1rem 1.1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+    }
+    .stat h2 {
+        margin: 0;
+        font-size: 1rem;
+        color: #cbd5f5;
+    }
+    .stat p {
+        margin: 0;
+        color: #e2e8f0;
+    }
+    .muted {
+        color: #94a3b8;
+        font-size: 0.92rem;
+    }
+    canvas {
+        width: 100%;
+        max-height: 620px;
+        background: #01030d;
+        border-radius: 18px;
+        border: 1px solid #111827;
+        display: block;
+    }
+    .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        align-items: center;
+        margin-bottom: 0.75rem;
+        color: #94a3b8;
+    }
+    .legend span {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.92rem;
+    }
+    .swatch {
+        width: 16px;
+        height: 16px;
+        border-radius: 4px;
+        border: 1px solid rgba(255,255,255,0.2);
+    }
+    label.toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 0.9rem;
+        cursor: pointer;
+    }
+    input[type="checkbox"] {
+        accent-color: #38bdf8;
+        width: 16px;
+        height: 16px;
+    }
+</style>
+</head>
+<body>
+<main>
+    <header>
+        <h1>Day 09 · Seat Rectangle Explorer</h1>
+        <p class="intro">
+            Paste the polygon control points from the puzzle input, then inspect the largest axis-aligned rectangles
+            from Part 1 (anywhere on the grid) and Part 2 (fully contained inside the seating bowl). The canvas
+            renders the walkable boundary, control points, and both best rectangles for quick intuition.
+        </p>
+    </header>
+    <section class="panel">
+        <div class="controls">
+            <button type="button" id="loadExample" class="secondary">Load Example</button>
+            <button type="button" id="loadPuzzle" class="secondary">Load Puzzle Input</button>
+            <button type="button" id="update">Update Visualization</button>
+            <span id="pointCount">0 control points</span>
+            <span id="analysisTime">– ms</span>
+        </div>
+        <textarea id="input" placeholder="x,y per line"></textarea>
+        <div class="status" id="status">Paste some coordinates to begin.</div>
+    </section>
+    <section class="panel">
+        <div class="stats-grid">
+            <article class="stat">
+                <h2>Part 1 · Maximum anywhere</h2>
+                <p id="part1Summary">–</p>
+                <p id="part1Details" class="muted"></p>
+                <label class="toggle"><input type="checkbox" id="showPart1" checked/>Show on canvas</label>
+            </article>
+            <article class="stat">
+                <h2>Part 2 · Inside seating bowl</h2>
+                <p id="part2Summary">–</p>
+                <p id="part2Details" class="muted"></p>
+                <label class="toggle"><input type="checkbox" id="showPart2" checked/>Show on canvas</label>
+            </article>
+            <article class="stat">
+                <h2>Display</h2>
+                <p>Toggle layers to focus on shapes.</p>
+                <label class="toggle"><input type="checkbox" id="showPoints" checked/>Show control points</label>
+            </article>
+        </div>
+        <div class="legend">
+            <span><span class="swatch" style="background:#1d4ed8"></span>Boundary trace</span>
+            <span><span class="swatch" style="background:#38bdf8"></span>Part 1 rectangle</span>
+            <span><span class="swatch" style="background:#facc15"></span>Part 2 rectangle</span>
+            <span><span class="swatch" style="background:#e2e8f0"></span>Control points</span>
+        </div>
+        <canvas id="view" width="960" height="540"></canvas>
+    </section>
+</main>
+<script>
+(() => {
+    'use strict';
+
+    const exampleInput = [
+        '7,1',
+        '11,1',
+        '11,7',
+        '9,7',
+        '9,5',
+        '2,5',
+        '2,3',
+        '7,3'
+    ].join('\n');
+
+    const textarea = document.getElementById('input');
+    const loadExampleBtn = document.getElementById('loadExample');
+    const loadPuzzleBtn = document.getElementById('loadPuzzle');
+    const updateBtn = document.getElementById('update');
+    const statusEl = document.getElementById('status');
+    const pointCountEl = document.getElementById('pointCount');
+    const analysisTimeEl = document.getElementById('analysisTime');
+    const part1SummaryEl = document.getElementById('part1Summary');
+    const part1DetailsEl = document.getElementById('part1Details');
+    const part2SummaryEl = document.getElementById('part2Summary');
+    const part2DetailsEl = document.getElementById('part2Details');
+    const showPart1 = document.getElementById('showPart1');
+    const showPart2 = document.getElementById('showPart2');
+    const showPoints = document.getElementById('showPoints');
+    const canvas = document.getElementById('view');
+    const ctx = canvas.getContext('2d');
+    const numberFormat = new Intl.NumberFormat('en-US');
+
+    textarea.value = exampleInput;
+
+    let lastPoints = [];
+    let lastResult = { part1: null, part2: null, duration: 0, part2Error: null };
+
+    loadExampleBtn.addEventListener('click', () => {
+        textarea.value = exampleInput;
+        analyze();
+    });
+
+    loadPuzzleBtn.addEventListener('click', async () => {
+        setStatus('Loading ../inputs/day09.txt …');
+        try {
+            const response = await fetch('../inputs/day09.txt');
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            const text = await response.text();
+            textarea.value = text.trim();
+            setStatus('Loaded puzzle input.');
+            analyze();
+        } catch (err) {
+            setStatus('Unable to load puzzle input automatically. Paste it manually instead.', true);
+            console.warn(err);
+        }
+    });
+
+    updateBtn.addEventListener('click', analyze);
+    textarea.addEventListener('keydown', (event) => {
+        if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
+            analyze();
+        }
+    });
+
+    showPart1.addEventListener('change', () => drawScene(lastPoints, lastResult));
+    showPart2.addEventListener('change', () => drawScene(lastPoints, lastResult));
+    showPoints.addEventListener('change', () => drawScene(lastPoints, lastResult));
+
+    analyze();
+
+    function analyze() {
+        let points;
+        try {
+            points = parseInput(textarea.value);
+        } catch (err) {
+            lastPoints = [];
+            lastResult = { part1: null, part2: null, duration: 0, part2Error: null };
+            updateStats();
+            drawScene([], lastResult);
+            setStatus(err.message, true);
+            return;
+        }
+        lastPoints = points;
+        if (points.length < 2) {
+            lastResult = { part1: null, part2: null, duration: 0, part2Error: null };
+            updateStats();
+            drawScene(points, lastResult);
+            setStatus('Enter at least two coordinates (x,y) to compare rectangles.', true);
+            return;
+        }
+        const start = performance.now();
+        const analysis = solve(points);
+        analysis.duration = performance.now() - start;
+        lastResult = analysis;
+        updateStats();
+        drawScene(points, analysis);
+        if (analysis.part2Error) {
+            setStatus(`Part 2 unavailable: ${analysis.part2Error}`, true);
+        } else {
+            setStatus(`Analyzed ${points.length} control points in ${analysis.duration.toFixed(1)} ms.`);
+        }
+    }
+
+    function solve(points) {
+        const result = { part1: null, part2: null, duration: 0, part2Error: null };
+        let region = null;
+        try {
+            region = new Region(points);
+        } catch (err) {
+            result.part2Error = err.message;
+        }
+        let bestPart1 = null;
+        let bestPart2 = null;
+        for (let i = 0; i < points.length; i++) {
+            const a = points[i];
+            for (let j = i + 1; j < points.length; j++) {
+                const b = points[j];
+                const width = Math.abs(a.x - b.x) + 1;
+                const height = Math.abs(a.y - b.y) + 1;
+                const area = width * height;
+                if (!bestPart1 || area > bestPart1.area) {
+                    bestPart1 = { a, b, width, height, area };
+                }
+                if (region && region.rectangleInside(a.x, a.y, b.x, b.y)) {
+                    if (!bestPart2 || area > bestPart2.area) {
+                        bestPart2 = { a, b, width, height, area };
+                    }
+                }
+            }
+        }
+        result.part1 = bestPart1;
+        result.part2 = bestPart2;
+        return result;
+    }
+
+    function parseInput(raw) {
+        const points = [];
+        const lines = raw.split(/\r?\n/);
+        for (let idx = 0; idx < lines.length; idx++) {
+            const line = lines[idx].trim();
+            if (!line || line.startsWith('#')) {
+                continue;
+            }
+            const parts = line.split(',');
+            if (parts.length !== 2) {
+                throw new Error(`Line ${idx + 1}: expected "x,y"`);
+            }
+            const x = Number(parts[0].trim());
+            const y = Number(parts[1].trim());
+            if (!Number.isFinite(x) || !Number.isFinite(y)) {
+                throw new Error(`Line ${idx + 1}: invalid coordinate`);
+            }
+            points.push({ x, y });
+        }
+        if (!points.length) {
+            throw new Error('Provide at least one coordinate pair.');
+        }
+        return points;
+    }
+
+    function updateStats() {
+        pointCountEl.textContent = `${lastPoints.length} control points`;
+        analysisTimeEl.textContent = lastResult.duration
+            ? `${lastResult.duration.toFixed(1)} ms`
+            : '– ms';
+        if (lastResult.part1) {
+            part1SummaryEl.textContent = `${numberFormat.format(lastResult.part1.area)} seats (${numberFormat.format(lastResult.part1.width)} × ${numberFormat.format(lastResult.part1.height)})`;
+            part1DetailsEl.textContent = describeCorners(lastResult.part1);
+        } else {
+            part1SummaryEl.textContent = 'Need at least two points to form a rectangle.';
+            part1DetailsEl.textContent = '';
+        }
+        if (lastResult.part2) {
+            part2SummaryEl.textContent = `${numberFormat.format(lastResult.part2.area)} seats (${numberFormat.format(lastResult.part2.width)} × ${numberFormat.format(lastResult.part2.height)})`;
+            part2DetailsEl.textContent = describeCorners(lastResult.part2);
+        } else {
+            part2SummaryEl.textContent = lastResult.part2Error
+                ? 'Part 2 not available for these points.'
+                : 'No fully-contained rectangle found yet.';
+            part2DetailsEl.textContent = '';
+        }
+    }
+
+    function describeCorners(rect) {
+        const minX = Math.min(rect.a.x, rect.b.x);
+        const maxX = Math.max(rect.a.x, rect.b.x);
+        const minY = Math.min(rect.a.y, rect.b.y);
+        const maxY = Math.max(rect.a.y, rect.b.y);
+        return `Corners: (${numberFormat.format(minX)}, ${numberFormat.format(minY)}) → (${numberFormat.format(maxX)}, ${numberFormat.format(maxY)})`;
+    }
+
+    function drawScene(points, result) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#01030d';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        if (!points.length) {
+            return;
+        }
+        const bounds = computeBounds(points, result.part1, result.part2);
+        drawPolygon(points, bounds);
+        if (showPoints.checked) {
+            drawPoints(points, bounds);
+        }
+        if (result.part1 && showPart1.checked) {
+            drawRect(result.part1, bounds, '#38bdf8');
+        }
+        if (result.part2 && showPart2.checked) {
+            drawRect(result.part2, bounds, '#facc15');
+        }
+    }
+
+    function computeBounds(points, rect1, rect2) {
+        let minX = Infinity;
+        let maxX = -Infinity;
+        let minY = Infinity;
+        let maxY = -Infinity;
+        const touch = (x, y) => {
+            if (x < minX) minX = x;
+            if (x > maxX) maxX = x;
+            if (y < minY) minY = y;
+            if (y > maxY) maxY = y;
+        };
+        points.forEach((pt) => touch(pt.x, pt.y));
+        [rect1, rect2].forEach((rect) => {
+            if (!rect) return;
+            touch(Math.min(rect.a.x, rect.b.x), Math.min(rect.a.y, rect.b.y));
+            touch(Math.max(rect.a.x, rect.b.x), Math.max(rect.a.y, rect.b.y));
+        });
+        if (!Number.isFinite(minX)) {
+            minX = 0;
+            maxX = 1;
+            minY = 0;
+            maxY = 1;
+        }
+        const spanX = Math.max(1, maxX - minX);
+        const spanY = Math.max(1, maxY - minY);
+        const padding = 32;
+        const drawWidth = canvas.width - padding * 2;
+        const drawHeight = canvas.height - padding * 2;
+        const scale = Math.min(drawWidth / spanX, drawHeight / spanY);
+        const extraX = (drawWidth - spanX * scale) / 2;
+        const extraY = (drawHeight - spanY * scale) / 2;
+        return {
+            project(point) {
+                const x = padding + extraX + (point.x - minX) * scale;
+                const y = padding + extraY + (maxY - point.y) * scale;
+                return [x, y];
+            }
+        };
+    }
+
+    function drawPolygon(points, bounds) {
+        if (points.length < 2) {
+            return;
+        }
+        ctx.beginPath();
+        const [sx, sy] = bounds.project(points[0]);
+        ctx.moveTo(sx, sy);
+        for (let i = 1; i < points.length; i++) {
+            const [x, y] = bounds.project(points[i]);
+            ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(56, 189, 248, 0.07)';
+        ctx.strokeStyle = '#1d4ed8';
+        ctx.lineWidth = 1.4;
+        ctx.fill();
+        ctx.stroke();
+    }
+
+    function drawPoints(points, bounds) {
+        ctx.fillStyle = '#e2e8f0';
+        for (const pt of points) {
+            const [x, y] = bounds.project(pt);
+            ctx.beginPath();
+            ctx.arc(x, y, 3, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    function drawRect(rect, bounds, color) {
+        const minX = Math.min(rect.a.x, rect.b.x);
+        const maxX = Math.max(rect.a.x, rect.b.x);
+        const minY = Math.min(rect.a.y, rect.b.y);
+        const maxY = Math.max(rect.a.y, rect.b.y);
+        const [x1, y1] = bounds.project({ x: minX, y: maxY });
+        const [x2, y2] = bounds.project({ x: maxX, y: minY });
+        const width = x2 - x1;
+        const height = y2 - y1;
+        ctx.save();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 3;
+        ctx.setLineDash([8, 6]);
+        ctx.strokeRect(x1, y1, width, height);
+        ctx.globalAlpha = 0.12;
+        ctx.fillStyle = color;
+        ctx.fillRect(x1, y1, width, height);
+        ctx.restore();
+    }
+
+    function setStatus(message, isError = false) {
+        statusEl.textContent = message;
+        statusEl.classList.toggle('error', isError);
+    }
+
+    class Region {
+        constructor(points) {
+            const axesX = buildAxis(points.map((p) => p.x));
+            const axesY = buildAxis(points.map((p) => p.y));
+            this.xIndex = axesX.index;
+            this.yIndex = axesY.index;
+            const w = axesX.coords.length - 1;
+            const h = axesY.coords.length - 1;
+            const diff = Array.from({ length: h + 1 }, () => new Array(w + 1).fill(0));
+            for (let i = 0; i < points.length; i++) {
+                const a = points[i];
+                const b = points[(i + 1) % points.length];
+                if (a.x === b.x) {
+                    const sx = a.x * 2;
+                    const xStart = sx - 1;
+                    const xEnd = sx + 1;
+                    const yLo = Math.min(a.y, b.y);
+                    const yHi = Math.max(a.y, b.y);
+                    const yStart = yLo * 2 - 1;
+                    const yEnd = yHi * 2 + 1;
+                    addRect(diff, this.xIndex, this.yIndex, xStart, xEnd, yStart, yEnd);
+                } else {
+                    const sy = a.y * 2;
+                    const yStart = sy - 1;
+                    const yEnd = sy + 1;
+                    const xLo = Math.min(a.x, b.x);
+                    const xHi = Math.max(a.x, b.x);
+                    const xStart = xLo * 2 - 1;
+                    const xEnd = xHi * 2 + 1;
+                    addRect(diff, this.xIndex, this.yIndex, xStart, xEnd, yStart, yEnd);
+                }
+            }
+            const blocked = buildBlocked(diff);
+            const outside = floodOutside(blocked);
+            this.outsidePrefix = buildOutsidePrefix(outside);
+        }
+
+        rectangleInside(x1, y1, x2, y2) {
+            const sxLo = Math.min(x1, x2) * 2 - 1;
+            const sxHi = Math.max(x1, x2) * 2 + 1;
+            const syLo = Math.min(y1, y2) * 2 - 1;
+            const syHi = Math.max(y1, y2) * 2 + 1;
+            const ixLo = this.xIndex.get(sxLo);
+            const ixHi = this.xIndex.get(sxHi);
+            const iyLo = this.yIndex.get(syLo);
+            const iyHi = this.yIndex.get(syHi);
+            if (
+                ixLo === undefined ||
+                ixHi === undefined ||
+                iyLo === undefined ||
+                iyHi === undefined
+            ) {
+                throw new Error('Failed to map rectangle onto compressed grid.');
+            }
+            return queryPrefix(this.outsidePrefix, ixLo, ixHi, iyLo, iyHi) === 0;
+        }
+    }
+
+    function buildAxis(values) {
+        const coords = new Set();
+        let min = Infinity;
+        let max = -Infinity;
+        for (const v of values) {
+            const scaled = v * 2;
+            coords.add(scaled - 1);
+            coords.add(scaled + 1);
+            if (scaled < min) min = scaled;
+            if (scaled > max) max = scaled;
+        }
+        coords.add(min - 3);
+        coords.add(max + 3);
+        const sorted = Array.from(coords).sort((a, b) => a - b);
+        const index = new Map();
+        sorted.forEach((value, idx) => index.set(value, idx));
+        return { coords: sorted, index };
+    }
+
+    function addRect(diff, xIndex, yIndex, xStart, xEnd, yStart, yEnd) {
+        const ix0 = xIndex.get(xStart);
+        const ix1 = xIndex.get(xEnd);
+        const iy0 = yIndex.get(yStart);
+        const iy1 = yIndex.get(yEnd);
+        if (
+            ix0 === undefined ||
+            ix1 === undefined ||
+            iy0 === undefined ||
+            iy1 === undefined
+        ) {
+            throw new Error('Edge mapping failed during region build.');
+        }
+        diff[iy0][ix0] += 1;
+        diff[iy1][ix0] -= 1;
+        diff[iy0][ix1] -= 1;
+        diff[iy1][ix1] += 1;
+    }
+
+    function buildBlocked(diff) {
+        const h = diff.length - 1;
+        const w = diff[0].length - 1;
+        const blocked = Array.from({ length: h }, () => new Array(w).fill(false));
+        for (let y = 0; y < h; y++) {
+            for (let x = 0; x < w; x++) {
+                if (y > 0) diff[y][x] += diff[y - 1][x];
+                if (x > 0) diff[y][x] += diff[y][x - 1];
+                if (y > 0 && x > 0) diff[y][x] -= diff[y - 1][x - 1];
+                blocked[y][x] = diff[y][x] > 0;
+            }
+        }
+        return blocked;
+    }
+
+    function floodOutside(blocked) {
+        const h = blocked.length;
+        const w = blocked[0].length;
+        const outside = Array.from({ length: h }, () => new Array(w).fill(false));
+        const queue = [];
+        let head = 0;
+        let start = null;
+        outer: for (let y = 0; y < h; y++) {
+            for (let x = 0; x < w; x++) {
+                const edge = y === 0 || x === 0 || y + 1 === h || x + 1 === w;
+                if (edge && !blocked[y][x]) {
+                    start = [y, x];
+                    break outer;
+                }
+            }
+        }
+        if (!start) {
+            throw new Error('Unable to locate an outside starting cell.');
+        }
+        queue.push(start);
+        while (head < queue.length) {
+            const [y, x] = queue[head++];
+            if (outside[y][x]) {
+                continue;
+            }
+            outside[y][x] = true;
+            const neighbors = [
+                [y + 1, x],
+                [y - 1, x],
+                [y, x + 1],
+                [y, x - 1]
+            ];
+            for (const [ny, nx] of neighbors) {
+                if (ny < 0 || nx < 0 || ny >= h || nx >= w) {
+                    continue;
+                }
+                if (!blocked[ny][nx] && !outside[ny][nx]) {
+                    queue.push([ny, nx]);
+                }
+            }
+        }
+        return outside;
+    }
+
+    function buildOutsidePrefix(outside) {
+        const h = outside.length;
+        const w = outside[0].length;
+        const pref = Array.from({ length: h + 1 }, () => new Array(w + 1).fill(0));
+        for (let y = 0; y < h; y++) {
+            let rowSum = 0;
+            for (let x = 0; x < w; x++) {
+                if (outside[y][x]) {
+                    rowSum += 1;
+                }
+                pref[y + 1][x + 1] = pref[y][x + 1] + rowSum;
+            }
+        }
+        return pref;
+    }
+
+    function queryPrefix(pref, x0, x1, y0, y1) {
+        return (
+            pref[y1][x1] -
+            pref[y0][x1] -
+            pref[y1][x0] +
+            pref[y0][x0]
+        );
+    }
+})();
+</script>
+</body>
+</html>
