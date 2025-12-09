@@ -11,7 +11,6 @@ pub mod day09;
 pub mod day10;
 pub mod day11;
 pub mod day12;
-pub mod day25;
 
 /// Run the selected day by id (e.g., "day01" or "1").
 pub fn run_day(id: &str) -> Result<(), Box<dyn std::error::Error>> {
@@ -29,7 +28,6 @@ pub fn run_day(id: &str) -> Result<(), Box<dyn std::error::Error>> {
         "day10" => day10::run(),
         "day11" => day11::run(),
         "day12" => day12::run(),
-        "day25" => day25::run(),
         _ => Err(format!("Unknown day: {}", id).into()),
     }
 }
