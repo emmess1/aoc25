@@ -51,7 +51,7 @@ mod tests {
         // Removing missing key returns None
         assert_eq!(g.remove(&Point::new(99,99)), None);
         // Bounds None when empty
-        let mut g2: SparseGrid<i32> = SparseGrid::new();
+        let g2: SparseGrid<i32> = SparseGrid::new();
         assert!(g2.bounds().is_none());
     }
 }

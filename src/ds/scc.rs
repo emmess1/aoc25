@@ -49,7 +49,7 @@ mod tests {
         // Create a finished SCC {0,1,2} and an extra node 3 with an edge to 0.
         // When exploring 3 after {0,1,2} is completed, the edge 3->0 hits
         // the branch where index[v] is Some and onstack[v] is false.
-        let mut adj = vec![vec![1], vec![2], vec![0], vec![0]];
+        let adj = vec![vec![1], vec![2], vec![0], vec![0]];
         let comps = tarjan_scc(&adj);
         assert_eq!(comps.len(), 2);
     }
