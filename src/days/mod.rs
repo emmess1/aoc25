@@ -1,4 +1,3 @@
-pub mod util;
 pub mod day01;
 pub mod day02;
 pub mod day03;
@@ -11,6 +10,7 @@ pub mod day09;
 pub mod day10;
 pub mod day11;
 pub mod day12;
+pub mod util;
 
 /// Run the selected day by id (e.g., "day01" or "1").
 pub fn run_day(id: &str) -> Result<(), Box<dyn std::error::Error>> {

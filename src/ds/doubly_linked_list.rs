@@ -63,18 +63,30 @@ pub struct DoublyLinkedList<T> {
 impl<T> DoublyLinkedList<T> {
     /// Creates an empty list.
     pub fn new() -> Self {
-        Self { head: None, tail: None, len: 0 }
+        Self {
+            head: None,
+            tail: None,
+            len: 0,
+        }
     }
 
     /// Returns `true` if the list contains no elements.
-    pub fn is_empty(&self) -> bool { self.len == 0 }
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
 
     /// Returns number of elements in the list.
-    pub fn len(&self) -> usize { self.len }
+    pub fn len(&self) -> usize {
+        self.len
+    }
 
     /// Pushes an element to the front (head) of the list. O(1).
     pub fn push_front(&mut self, elem: T) {
-        let new = Rc::new(RefCell::new(Node { elem: Some(elem), next: self.head.clone(), prev: None }));
+        let new = Rc::new(RefCell::new(Node {
+            elem: Some(elem),
+            next: self.head.clone(),
+            prev: None,
+        }));
         match self.head.take() {
             Some(old_head) => {
                 old_head.borrow_mut().prev = Some(Rc::downgrade(&new));
@@ -91,7 +103,11 @@ impl<T> DoublyLinkedList<T> {
 
     /// Pushes an element to the back (tail) of the list. O(1).
     pub fn push_back(&mut self, elem: T) {
-        let new = Rc::new(RefCell::new(Node { elem: Some(elem), next: None, prev: None }));
+        let new = Rc::new(RefCell::new(Node {
+            elem: Some(elem),
+            next: None,
+            prev: None,
+        }));
         match self.tail.take() {
             Some(old_tail) => {
                 new.borrow_mut().prev = Some(Rc::downgrade(&old_tail));
@@ -113,14 +129,24 @@ impl<T> DoublyLinkedList<T> {
 
     /// Returns a clone of the front element, if any. O(1).
     /// Requires `T: Clone`.
-    pub fn peek_front(&self) -> Option<T> where T: Clone {
-        self.head.as_ref().and_then(|rc| rc.borrow().elem.as_ref().cloned())
+    pub fn peek_front(&self) -> Option<T>
+    where
+        T: Clone,
+    {
+        self.head
+            .as_ref()
+            .and_then(|rc| rc.borrow().elem.as_ref().cloned())
     }
 
     /// Returns a clone of the back element, if any. O(1).
     /// Requires `T: Clone`.
-    pub fn peek_back(&self) -> Option<T> where T: Clone {
-        self.tail.as_ref().and_then(|rc| rc.borrow().elem.as_ref().cloned())
+    pub fn peek_back(&self) -> Option<T>
+    where
+        T: Clone,
+    {
+        self.tail
+            .as_ref()
+            .and_then(|rc| rc.borrow().elem.as_ref().cloned())
     }
 
     /// Clears the list by popping from the front until empty. O(n).
@@ -139,10 +165,14 @@ impl<T> DoublyLinkedList<T> {
         // `Rc` clones of this node exist.
         let mut head_b = head.borrow_mut();
         let next = head_b.next.take();
-        if let Some(ref n) = next { n.borrow_mut().prev = None; }
+        if let Some(ref n) = next {
+            n.borrow_mut().prev = None;
+        }
         drop(head_b);
         self.head = next;
-        if self.head.is_none() { self.tail = None; }
+        if self.head.is_none() {
+            self.tail = None;
+        }
         self.len -= 1;
         // Move the payload out of the node. We do NOT rely on unique `Rc`
         // ownership here; taking from the `RefCell` is safe even if other
@@ -159,10 +189,14 @@ impl<T> DoublyLinkedList<T> {
         let mut tail_b = tail.borrow_mut();
         let prev_weak = tail_b.prev.take();
         let prev = prev_weak.and_then(|w| w.upgrade());
-        if let Some(ref p) = prev { p.borrow_mut().next = None; }
+        if let Some(ref p) = prev {
+            p.borrow_mut().next = None;
+        }
         drop(tail_b);
         self.tail = prev.clone();
-        if self.tail.is_none() { self.head = None; }
+        if self.tail.is_none() {
+            self.head = None;
+        }
         self.len -= 1;
         // Same borrow-shortening pattern as in `pop_front_value`.
         let mut cell = tail.borrow_mut();
@@ -171,7 +205,10 @@ impl<T> DoublyLinkedList<T> {
 
     /// Pops and returns the front element by cloning it out. O(1).
     /// Requires `T: Clone`.
-    pub fn pop_front_cloned(&mut self) -> Option<T> where T: Clone {
+    pub fn pop_front_cloned(&mut self) -> Option<T>
+    where
+        T: Clone,
+    {
         let val = self.peek_front()?;
         // remove front node structurally
         let _ = self.pop_front_value();
@@ -180,7 +217,10 @@ impl<T> DoublyLinkedList<T> {
 
     /// Pops and returns the back element by cloning it out. O(1).
     /// Requires `T: Clone`.
-    pub fn pop_back_cloned(&mut self) -> Option<T> where T: Clone {
+    pub fn pop_back_cloned(&mut self) -> Option<T>
+    where
+        T: Clone,
+    {
         let val = self.peek_back()?;
         let _ = self.pop_back_value();
         Some(val)
@@ -201,7 +241,9 @@ pub struct IntoIter<T> {
 
 impl<T> Iterator for IntoIter<T> {
     type Item = T;
-    fn next(&mut self) -> Option<Self::Item> { self.list.pop_front_value() }
+    fn next(&mut self) -> Option<Self::Item> {
+        self.list.pop_front_value()
+    }
 }
 
 #[cfg(test)]
@@ -238,7 +280,9 @@ mod tests {
     #[test]
     fn pop_front_cloned_sequence() {
         let mut dl = DoublyLinkedList::new();
-        for i in 1..=3 { dl.push_back(i); }
+        for i in 1..=3 {
+            dl.push_back(i);
+        }
         assert_eq!(dl.pop_front_cloned(), Some(1));
         assert_eq!(dl.pop_front_cloned(), Some(2));
         assert_eq!(dl.pop_front_cloned(), Some(3));
@@ -249,7 +293,9 @@ mod tests {
     #[test]
     fn pop_back_cloned_sequence() {
         let mut dl = DoublyLinkedList::new();
-        for i in 1..=3 { dl.push_back(i); }
+        for i in 1..=3 {
+            dl.push_back(i);
+        }
         assert_eq!(dl.pop_back_cloned(), Some(3));
         assert_eq!(dl.pop_back_cloned(), Some(2));
         assert_eq!(dl.pop_back_cloned(), Some(1));
@@ -274,10 +320,14 @@ mod tests {
     #[test]
     fn clear_and_reuse() {
         let mut dl = DoublyLinkedList::new();
-        for i in 0..5 { dl.push_back(i); }
+        for i in 0..5 {
+            dl.push_back(i);
+        }
         dl.clear();
         assert!(dl.is_empty());
-        for i in 5..10 { dl.push_front(i); }
+        for i in 5..10 {
+            dl.push_front(i);
+        }
         assert_eq!(dl.peek_front(), Some(9));
         assert_eq!(dl.len(), 5);
     }
@@ -285,9 +335,11 @@ mod tests {
     #[test]
     fn into_iter_drains() {
         let mut dl = DoublyLinkedList::new();
-        for i in 0..4 { dl.push_back(i); }
+        for i in 0..4 {
+            dl.push_back(i);
+        }
         let v: Vec<_> = dl.into_iter().collect();
-        assert_eq!(v, vec![0,1,2,3]);
+        assert_eq!(v, vec![0, 1, 2, 3]);
     }
 
     #[test]

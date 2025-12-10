@@ -11,8 +11,8 @@
 //! - `insert`, `get`, `get_mut`, `remove`: O(1) average; O(n) worst case
 //!   if many keys collide into the same bucket.
 
-use std::hash::{Hash, Hasher};
 use std::collections::hash_map::DefaultHasher;
+use std::hash::{Hash, Hasher};
 
 /// Default initial number of buckets (rounded to power of two internally).
 const INITIAL_CAPACITY: usize = 16;
@@ -49,10 +49,14 @@ impl<K: Eq + Hash, V> SimpleHashMap<K, V> {
     }
 
     /// Returns the number of elements in the map.
-    pub fn len(&self) -> usize { self.items }
+    pub fn len(&self) -> usize {
+        self.items
+    }
 
     /// Returns `true` if the map contains no elements.
-    pub fn is_empty(&self) -> bool { self.items == 0 }
+    pub fn is_empty(&self) -> bool {
+        self.items == 0
+    }
 
     /// Map a key to a bucket index using the default hasher.
     ///
@@ -128,7 +132,10 @@ impl<K: Eq + Hash, V> SimpleHashMap<K, V> {
     /// ```
     pub fn get(&self, key: &K) -> Option<&V> {
         let idx = self.bucket_index(key);
-        self.buckets[idx].iter().find(|(k, _)| k == key).map(|(_, v)| v)
+        self.buckets[idx]
+            .iter()
+            .find(|(k, _)| k == key)
+            .map(|(_, v)| v)
     }
 
     /// Returns a mutable reference to the value corresponding to the key.
@@ -143,11 +150,16 @@ impl<K: Eq + Hash, V> SimpleHashMap<K, V> {
     /// ```
     pub fn get_mut(&mut self, key: &K) -> Option<&mut V> {
         let idx = self.bucket_index(key);
-        self.buckets[idx].iter_mut().find(|(k, _)| k == key).map(|(_, v)| v)
+        self.buckets[idx]
+            .iter_mut()
+            .find(|(k, _)| k == key)
+            .map(|(_, v)| v)
     }
 
     /// Returns true if the key exists in the map.
-    pub fn contains_key(&self, key: &K) -> bool { self.get(key).is_some() }
+    pub fn contains_key(&self, key: &K) -> bool {
+        self.get(key).is_some()
+    }
 
     /// Removes and returns the value corresponding to the key.
     ///
@@ -175,7 +187,9 @@ impl<K: Eq + Hash, V> SimpleHashMap<K, V> {
     }
 
     #[cfg(test)]
-    pub(crate) fn bucket_count(&self) -> usize { self.buckets.len() }
+    pub(crate) fn bucket_count(&self) -> usize {
+        self.buckets.len()
+    }
 }
 
 #[cfg(test)]
@@ -205,7 +219,9 @@ mod tests {
         assert_eq!(m.get(&"a"), Some(&10));
 
         // get_mut
-        if let Some(v) = m.get_mut(&"b") { *v = 20; }
+        if let Some(v) = m.get_mut(&"b") {
+            *v = 20;
+        }
         assert_eq!(m.get(&"b"), Some(&20));
 
         // remove
@@ -242,7 +258,9 @@ mod tests {
     #[test]
     fn clear_empties_map() {
         let mut m = SimpleHashMap::new();
-        for i in 0..8 { m.insert(i, i); }
+        for i in 0..8 {
+            m.insert(i, i);
+        }
         assert!(m.len() > 0);
         m.clear();
         assert!(m.is_empty());
@@ -291,7 +309,9 @@ mod tests {
         let mut m: SimpleHashMap<String, String> = SimpleHashMap::new();
         assert_eq!(m.insert("key".into(), "val".into()), None);
         assert_eq!(m.get(&"key".to_string()), Some(&"val".to_string()));
-        if let Some(v) = m.get_mut(&"key".to_string()) { v.push_str("2"); }
+        if let Some(v) = m.get_mut(&"key".to_string()) {
+            v.push_str("2");
+        }
         assert_eq!(m.get(&"key".to_string()), Some(&"val2".to_string()));
     }
 
@@ -307,8 +327,12 @@ mod tests {
     #[test]
     fn remove_all_entries() {
         let mut m = SimpleHashMap::new();
-        for i in 0..20 { m.insert(i, i); }
-        for i in 0..20 { assert_eq!(m.remove(&i), Some(i)); }
+        for i in 0..20 {
+            m.insert(i, i);
+        }
+        for i in 0..20 {
+            assert_eq!(m.remove(&i), Some(i));
+        }
         assert!(m.is_empty());
     }
 
@@ -344,10 +368,14 @@ mod tests {
         #[derive(Debug, Clone, Copy, PartialEq, Eq)]
         struct Collide(u64);
         impl Hash for Collide {
-            fn hash<H: Hasher>(&self, state: &mut H) { 0u64.hash(state); }
+            fn hash<H: Hasher>(&self, state: &mut H) {
+                0u64.hash(state);
+            }
         }
         let mut m = SimpleHashMap::with_capacity(4);
-        for i in 0..5 { m.insert(Collide(i), i as i32); }
+        for i in 0..5 {
+            m.insert(Collide(i), i as i32);
+        }
         // Key not present but hashes to same bucket
         assert_eq!(m.get(&Collide(999)), None);
         assert!(m.get_mut(&Collide(999)).is_none());

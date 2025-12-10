@@ -115,11 +115,17 @@ pub const EXPECTED: &[&str] = &[
 /// Return which expected ids are still missing.
 pub fn missing() -> Vec<&'static str> {
     let snap = snapshot();
-    EXPECTED.iter().copied().filter(|id| !snap.contains(id)).collect()
+    EXPECTED
+        .iter()
+        .copied()
+        .filter(|id| !snap.contains(id))
+        .collect()
 }
 
 /// True if all expected behaviors were hit.
-pub fn all_hit() -> bool { missing().is_empty() }
+pub fn all_hit() -> bool {
+    missing().is_empty()
+}
 
 #[cfg(test)]
 mod tests {
@@ -132,7 +138,9 @@ mod tests {
         assert_eq!(m0.len(), EXPECTED.len());
 
         // Hit all expected behaviors to drive missing() to empty and all_hit() to true.
-        for &id in EXPECTED { hit(id); }
+        for &id in EXPECTED {
+            hit(id);
+        }
         assert!(all_hit());
         assert!(missing().is_empty());
 

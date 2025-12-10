@@ -5,9 +5,7 @@
 //! blocks that are not multiples of a smaller repeating unit) are included,
 //! mirroring the main solver logic.
 
-use crate::days::day02::{
-    ceil_div, num_digits, primitive_sum_for_len, sum_range,
-};
+use crate::days::day02::{ceil_div, num_digits, primitive_sum_for_len, sum_range};
 
 pub fn render_part2_report(input: &str) -> String {
     let ranges = super::super::parse_ranges(input);
@@ -69,8 +67,7 @@ fn describe_range_part2(
             if x_lo > x_hi {
                 continue;
             }
-            let primitive =
-                primitive_sum_for_len(len, x_lo, x_hi, pow10, divisors);
+            let primitive = primitive_sum_for_len(len, x_lo, x_hi, pow10, divisors);
             if primitive == 0 {
                 continue;
             }

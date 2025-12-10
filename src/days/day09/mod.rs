@@ -62,7 +62,11 @@ fn parse_points(input: &str) -> Vec<[i64; 2]> {
 
 pub fn run() -> Result<(), Box<dyn std::error::Error>> {
     let input = util::read_input("day09")?;
-    println!("Day 09\nPart 1: {}\nPart 2: {}", part1(&input), part2(&input));
+    println!(
+        "Day 09\nPart 1: {}\nPart 2: {}",
+        part1(&input),
+        part2(&input)
+    );
     Ok(())
 }
 
@@ -87,18 +91,30 @@ impl Region {
                 let sx = a[0] * 2;
                 let x_start = sx - 1;
                 let x_end = sx + 1;
-                let (y_lo, y_hi) = if a[1] <= b[1] { (a[1], b[1]) } else { (b[1], a[1]) };
+                let (y_lo, y_hi) = if a[1] <= b[1] {
+                    (a[1], b[1])
+                } else {
+                    (b[1], a[1])
+                };
                 let y_start = y_lo * 2 - 1;
                 let y_end = y_hi * 2 + 1;
-                add_rect(&mut diff, &x_index, &y_index, x_start, x_end, y_start, y_end);
+                add_rect(
+                    &mut diff, &x_index, &y_index, x_start, x_end, y_start, y_end,
+                );
             } else {
                 let sy = a[1] * 2;
                 let y_start = sy - 1;
                 let y_end = sy + 1;
-                let (x_lo, x_hi) = if a[0] <= b[0] { (a[0], b[0]) } else { (b[0], a[0]) };
+                let (x_lo, x_hi) = if a[0] <= b[0] {
+                    (a[0], b[0])
+                } else {
+                    (b[0], a[0])
+                };
                 let x_start = x_lo * 2 - 1;
                 let x_end = x_hi * 2 + 1;
-                add_rect(&mut diff, &x_index, &y_index, x_start, x_end, y_start, y_end);
+                add_rect(
+                    &mut diff, &x_index, &y_index, x_start, x_end, y_start, y_end,
+                );
             }
         }
         let blocked = build_blocked(diff);
@@ -136,9 +152,7 @@ impl Region {
     }
 
     fn query_outside(&self, x0: usize, x1: usize, y0: usize, y1: usize) -> i64 {
-        self.outside_prefix[y1][x1]
-            - self.outside_prefix[y0][x1]
-            - self.outside_prefix[y1][x0]
+        self.outside_prefix[y1][x1] - self.outside_prefix[y0][x1] - self.outside_prefix[y1][x0]
             + self.outside_prefix[y0][x0]
     }
 }
@@ -271,7 +285,10 @@ mod tests {
 
     const EXPECTED_PART1: Option<&str> = Some("50");
     const EXPECTED_PART2: Option<&str> = Some("24");
-    const EXAMPLE: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/inputs/day09_example.txt"));
+    const EXAMPLE: &str = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/inputs/day09_example.txt"
+    ));
 
     #[test]
     fn example_part1() {

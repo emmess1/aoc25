@@ -16,4 +16,3 @@ pub fn read_input(day: &str) -> std::io::Result<String> {
     let path = format!("inputs/{}.txt", id);
     fs::read_to_string(path)
 }
-

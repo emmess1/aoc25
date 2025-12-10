@@ -56,9 +56,7 @@ fn max_subsequence_value(line: &str) -> u64 {
         .filter_map(|ch| ch.to_digit(10).map(|d| d as u8))
         .collect();
     if digits.len() <= PICK {
-        return digits
-            .iter()
-            .fold(0u64, |acc, &d| acc * 10 + d as u64);
+        return digits.iter().fold(0u64, |acc, &d| acc * 10 + d as u64);
     }
     let mut keep = Vec::with_capacity(PICK);
     let mut to_remove = digits.len() - PICK;
@@ -75,7 +73,11 @@ fn max_subsequence_value(line: &str) -> u64 {
 
 pub fn run() -> Result<(), Box<dyn std::error::Error>> {
     let input = util::read_input("day03")?;
-    println!("Day 03\nPart 1: {}\nPart 2: {}", part1(&input), part2(&input));
+    println!(
+        "Day 03\nPart 1: {}\nPart 2: {}",
+        part1(&input),
+        part2(&input)
+    );
     Ok(())
 }
 
@@ -84,9 +86,22 @@ mod tests {
     use super::*;
     const EXPECTED_PART1: Option<&str> = Some("357");
     const EXPECTED_PART2: Option<&str> = Some("3121910778619");
-    const EXAMPLE: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/inputs/day03_example.txt"));
+    const EXAMPLE: &str = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/inputs/day03_example.txt"
+    ));
     #[test]
-    fn example_part1() { let got = part1(EXAMPLE); if let Some(exp)=EXPECTED_PART1 { assert_eq!(got, exp); } }
+    fn example_part1() {
+        let got = part1(EXAMPLE);
+        if let Some(exp) = EXPECTED_PART1 {
+            assert_eq!(got, exp);
+        }
+    }
     #[test]
-    fn example_part2() { let got = part2(EXAMPLE); if let Some(exp)=EXPECTED_PART2 { assert_eq!(got, exp); } }
+    fn example_part2() {
+        let got = part2(EXAMPLE);
+        if let Some(exp) = EXPECTED_PART2 {
+            assert_eq!(got, exp);
+        }
+    }
 }

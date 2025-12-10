@@ -44,7 +44,9 @@ fn solve_row_major(grid: &[Vec<char>]) -> u128 {
             if trimmed.is_empty() {
                 continue;
             }
-            let value = trimmed.parse::<u128>().expect("invalid number in worksheet");
+            let value = trimmed
+                .parse::<u128>()
+                .expect("invalid number in worksheet");
             operands.push(value);
         }
 
@@ -165,8 +167,7 @@ fn build_grid(input: &str) -> Option<Vec<Vec<char>>> {
     }
 
     Some(
-        rows
-            .into_iter()
+        rows.into_iter()
             .map(|line| {
                 let mut chars: Vec<char> = line.chars().collect();
                 while chars.len() < width {
@@ -180,7 +181,11 @@ fn build_grid(input: &str) -> Option<Vec<Vec<char>>> {
 
 pub fn run() -> Result<(), Box<dyn std::error::Error>> {
     let input = util::read_input("day06")?;
-    println!("Day 06\nPart 1: {}\nPart 2: {}", part1(&input), part2(&input));
+    println!(
+        "Day 06\nPart 1: {}\nPart 2: {}",
+        part1(&input),
+        part2(&input)
+    );
     Ok(())
 }
 
@@ -190,7 +195,10 @@ mod tests {
 
     const EXPECTED_PART1: Option<&str> = Some("4277556");
     const EXPECTED_PART2: Option<&str> = Some("3263827");
-    const EXAMPLE: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/inputs/day06_example.txt"));
+    const EXAMPLE: &str = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/inputs/day06_example.txt"
+    ));
 
     #[test]
     fn example_part1() {

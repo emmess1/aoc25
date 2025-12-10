@@ -81,9 +81,7 @@ mod tests {
     #[ignore]
     fn strings_solver_real_input() {
         let input = std::fs::read_to_string("inputs/day02.txt").expect("day02 input");
-        let expected: u128 = crate::days::day02::part1(&input)
-            .parse()
-            .expect("numeric");
+        let expected: u128 = crate::days::day02::part1(&input).parse().expect("numeric");
         assert_eq!(sum_with_strings_part1(&input), expected);
     }
 
@@ -91,9 +89,7 @@ mod tests {
     #[ignore]
     fn strings_part2_real_input() {
         let input = std::fs::read_to_string("inputs/day02.txt").expect("day02 input");
-        let expected: u128 = crate::days::day02::part2(&input)
-            .parse()
-            .expect("numeric");
+        let expected: u128 = crate::days::day02::part2(&input).parse().expect("numeric");
         assert_eq!(sum_with_strings_part2(&input), expected);
     }
 }

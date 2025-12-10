@@ -3,11 +3,20 @@
 use crate::ds::coords::Point;
 
 pub const DELTAS4: [Point; 4] = [
-    Point { x: 1, y: 0 }, Point { x: -1, y: 0 }, Point { x: 0, y: 1 }, Point { x: 0, y: -1 },
+    Point { x: 1, y: 0 },
+    Point { x: -1, y: 0 },
+    Point { x: 0, y: 1 },
+    Point { x: 0, y: -1 },
 ];
 pub const DELTAS8: [Point; 8] = [
-    Point { x: 1, y: 0 }, Point { x: -1, y: 0 }, Point { x: 0, y: 1 }, Point { x: 0, y: -1 },
-    Point { x: 1, y: 1 }, Point { x: 1, y: -1 }, Point { x: -1, y: 1 }, Point { x: -1, y: -1 },
+    Point { x: 1, y: 0 },
+    Point { x: -1, y: 0 },
+    Point { x: 0, y: 1 },
+    Point { x: 0, y: -1 },
+    Point { x: 1, y: 1 },
+    Point { x: 1, y: -1 },
+    Point { x: -1, y: 1 },
+    Point { x: -1, y: -1 },
 ];
 
 #[cfg(test)]

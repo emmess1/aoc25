@@ -42,7 +42,7 @@ fn stress_mix_operations() {
         assert_eq!(tm.get(&i), Some(&i));
     }
     for i in (0..200).step_by(3) {
-        assert!(hm.remove(&format!("k{}", i)) .is_some());
+        assert!(hm.remove(&format!("k{}", i)).is_some());
         assert!(tm.remove(&i).is_some());
     }
 }

@@ -71,11 +71,14 @@ fn shortest_edges(points: &[[i64; 3]], limit: usize) -> Vec<Edge> {
             }
         }
     }
-    heap.into_sorted_vec().into_iter().map(|h| Edge {
-        dist: h.dist,
-        a: h.a,
-        b: h.b,
-    }).collect()
+    heap.into_sorted_vec()
+        .into_iter()
+        .map(|h| Edge {
+            dist: h.dist,
+            a: h.a,
+            b: h.b,
+        })
+        .collect()
 }
 
 #[derive(Clone, Copy, Eq, PartialEq)]
@@ -205,7 +208,11 @@ fn all_edges(points: &[[i64; 3]]) -> Vec<Edge> {
 
 pub fn run() -> Result<(), Box<dyn std::error::Error>> {
     let input = util::read_input("day08")?;
-    println!("Day 08\nPart 1: {}\nPart 2: {}", part1(&input), part2(&input));
+    println!(
+        "Day 08\nPart 1: {}\nPart 2: {}",
+        part1(&input),
+        part2(&input)
+    );
     Ok(())
 }
 
@@ -215,7 +222,10 @@ mod tests {
 
     const EXPECTED_PART1: Option<&str> = Some("40");
     const EXPECTED_PART2: Option<&str> = Some("25272");
-    const EXAMPLE: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/inputs/day08_example.txt"));
+    const EXAMPLE: &str = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/inputs/day08_example.txt"
+    ));
 
     #[test]
     fn example_part1() {

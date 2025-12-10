@@ -41,13 +41,19 @@ struct Node<K, V> {
 
 impl<K: Ord, V> BstMap<K, V> {
     /// Creates an empty map.
-    pub fn new() -> Self { Self { root: None, len: 0 } }
+    pub fn new() -> Self {
+        Self { root: None, len: 0 }
+    }
 
     /// Returns `true` if the map contains no elements.
-    pub fn is_empty(&self) -> bool { self.len == 0 }
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
 
     /// Returns the number of elements in the map.
-    pub fn len(&self) -> usize { self.len }
+    pub fn len(&self) -> usize {
+        self.len
+    }
 
     /// Inserts a key-value pair into the map, returning the old value if the key existed.
     ///
@@ -74,7 +80,12 @@ impl<K: Ord, V> BstMap<K, V> {
                     }
                 },
                 None => {
-                    *link = Some(Box::new(Node { key, val, left: None, right: None }));
+                    *link = Some(Box::new(Node {
+                        key,
+                        val,
+                        left: None,
+                        right: None,
+                    }));
                     self.len += 1;
                     return None;
                 }
@@ -130,7 +141,9 @@ impl<K: Ord, V> BstMap<K, V> {
     }
 
     /// Returns true if the key exists in the map.
-    pub fn contains_key(&self, key: &K) -> bool { self.get(key).is_some() }
+    pub fn contains_key(&self, key: &K) -> bool {
+        self.get(key).is_some()
+    }
 
     /// Removes the key from the map, returning the stored value if present.
     ///
@@ -147,7 +160,9 @@ impl<K: Ord, V> BstMap<K, V> {
     /// ```
     pub fn remove(&mut self, key: &K) -> Option<V> {
         let removed = remove_node(&mut self.root, key);
-        if removed.is_some() { self.len -= 1; }
+        if removed.is_some() {
+            self.len -= 1;
+        }
         removed
     }
 }
@@ -163,7 +178,12 @@ fn remove_node<K: Ord, V>(link: &mut Link<K, V>, key: &K) -> Option<V> {
     // Found the node to remove. Take it out, rebuild the subtree according to
     // the standard BST deletion rules, and return the removed value.
     let boxed = link.take().unwrap();
-    let Node { key: _, val, left, right } = *boxed;
+    let Node {
+        key: _,
+        val,
+        left,
+        right,
+    } = *boxed;
     *link = match (left, right) {
         // Case 1: leaf
         (None, None) => None,
@@ -174,7 +194,12 @@ fn remove_node<K: Ord, V>(link: &mut Link<K, V>, key: &K) -> Option<V> {
         // Case 3: two children -> replace by successor (min of right subtree)
         (Some(l), Some(r)) => {
             let ((min_k, min_v), new_right) = pop_min(r);
-            Some(Box::new(Node { key: min_k, val: min_v, left: Some(l), right: new_right }))
+            Some(Box::new(Node {
+                key: min_k,
+                val: min_v,
+                left: Some(l),
+                right: new_right,
+            }))
         }
     };
     Some(val)
@@ -188,7 +213,9 @@ fn remove_node<K: Ord, V>(link: &mut Link<K, V>, key: &K) -> Option<V> {
 // leftmost node, then splice it out and return it.
 fn pop_min<K: Ord, V>(mut node: Box<Node<K, V>>) -> ((K, V), Link<K, V>) {
     if node.left.is_none() {
-        let Node { key, val, right, .. } = *node;
+        let Node {
+            key, val, right, ..
+        } = *node;
         return ((key, val), right);
     }
     let left = node.left.take().unwrap();
@@ -237,7 +264,9 @@ mod tests {
     #[test]
     fn get_mut_missing_left_and_right_paths() {
         let mut m = BstMap::new();
-        for k in [5, 3, 7] { m.insert(k, k * 10); }
+        for k in [5, 3, 7] {
+            m.insert(k, k * 10);
+        }
         // Missing left path: 2 < 5 then None
         assert!(m.get_mut(&2).is_none());
         // Missing right path: 9 > 7 then None
@@ -250,7 +279,9 @@ mod tests {
         assert_eq!(m.insert(10, 1), None);
         assert_eq!(m.insert(10, 2), Some(1));
         assert_eq!(m.get(&10), Some(&2));
-        if let Some(v) = m.get_mut(&10) { *v += 3; }
+        if let Some(v) = m.get_mut(&10) {
+            *v += 3;
+        }
         assert_eq!(m.get(&10), Some(&5));
     }
 
@@ -285,7 +316,15 @@ mod tests {
     fn remove_node_with_two_children() {
         let mut m = BstMap::new();
         // Build a tree where 5 has two children
-        for (k, v) in [(5, 'a'), (3, 'b'), (7, 'c'), (2, 'd'), (4, 'e'), (6, 'f'), (8, 'g')] {
+        for (k, v) in [
+            (5, 'a'),
+            (3, 'b'),
+            (7, 'c'),
+            (2, 'd'),
+            (4, 'e'),
+            (6, 'f'),
+            (8, 'g'),
+        ] {
             m.insert(k, v);
         }
         assert_eq!(m.len(), 7);
@@ -293,7 +332,7 @@ mod tests {
         assert!(!m.contains_key(&5));
         assert_eq!(m.len(), 6);
         // Remaining keys should still be present
-        for k in [2,3,4,6,7,8] {
+        for k in [2, 3, 4, 6, 7, 8] {
             assert!(m.contains_key(&k));
         }
     }
@@ -302,7 +341,9 @@ mod tests {
     fn remove_two_children_immediate_successor() {
         // Right child is the successor (no left subtree under right)
         let mut m = BstMap::new();
-        for k in [5, 3, 6, 2, 4, 7] { m.insert(k, k); }
+        for k in [5, 3, 6, 2, 4, 7] {
+            m.insert(k, k);
+        }
         assert_eq!(m.remove(&5), Some(5));
         assert!(!m.contains_key(&5));
         // 6 should be new root, 7 remains in right subtree
@@ -314,15 +355,25 @@ mod tests {
     fn skewed_insert_and_removes() {
         let mut m = BstMap::new();
         // Insert ascending to form a skewed tree
-        for i in 0..20 { m.insert(i, i * 2); }
+        for i in 0..20 {
+            m.insert(i, i * 2);
+        }
         assert_eq!(m.len(), 20);
-        for i in 0..20 { assert_eq!(m.get(&i), Some(&(i * 2))); }
+        for i in 0..20 {
+            assert_eq!(m.get(&i), Some(&(i * 2)));
+        }
         // Remove evens
-        for i in (0..20).step_by(2) { assert_eq!(m.remove(&i), Some(i * 2)); }
-        for i in (0..20).step_by(2) { assert!(!m.contains_key(&i)); }
+        for i in (0..20).step_by(2) {
+            assert_eq!(m.remove(&i), Some(i * 2));
+        }
+        for i in (0..20).step_by(2) {
+            assert!(!m.contains_key(&i));
+        }
         assert_eq!(m.len(), 10);
         // Remove odds
-        for i in (1..20).step_by(2) { assert!(m.remove(&i).is_some()); }
+        for i in (1..20).step_by(2) {
+            assert!(m.remove(&i).is_some());
+        }
         assert!(m.is_empty());
     }
 
@@ -370,7 +421,9 @@ mod tests {
     #[test]
     fn remove_missing_on_right_path() {
         let mut m = BstMap::new();
-        for k in [10, 15, 20] { m.insert(k, k); }
+        for k in [10, 15, 20] {
+            m.insert(k, k);
+        }
         let len_before = m.len();
         // Traverse right twice then miss
         assert_eq!(m.remove(&25), None);
@@ -389,7 +442,9 @@ mod tests {
             ("4".to_string(), 'e'),
             ("6".to_string(), 'f'),
             ("6a".to_string(), 'h'), // right child of successor
-        ] { m.insert(k, v); }
+        ] {
+            m.insert(k, v);
+        }
         assert_eq!(m.remove(&"5".to_string()), Some('a'));
         // Ensure successor's right child was reattached
         assert!(m.contains_key(&"6".to_string()));
@@ -401,7 +456,9 @@ mod tests {
     fn remove_node_with_only_left_child_non_root() {
         let mut m = BstMap::new();
         // 5 is root; 3 has only left child 2; 7 is right
-        for k in [5, 3, 7, 2] { m.insert(k, k * 10); }
+        for k in [5, 3, 7, 2] {
+            m.insert(k, k * 10);
+        }
         assert_eq!(m.remove(&3), Some(30));
         assert!(!m.contains_key(&3));
         assert!(m.contains_key(&2));

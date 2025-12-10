@@ -8,23 +8,39 @@ pub struct HashSetExt<T: Eq + Hash>(StdHashSet<T>);
 
 impl<T: Eq + Hash> HashSetExt<T> {
     /// Create empty.
-    pub fn new() -> Self { Self(StdHashSet::new()) }
+    pub fn new() -> Self {
+        Self(StdHashSet::new())
+    }
     /// Insert value, returns true if not present.
-    pub fn insert(&mut self, v: T) -> bool { self.0.insert(v) }
+    pub fn insert(&mut self, v: T) -> bool {
+        self.0.insert(v)
+    }
     /// Check membership.
-    pub fn contains(&self, v: &T) -> bool { self.0.contains(v) }
+    pub fn contains(&self, v: &T) -> bool {
+        self.0.contains(v)
+    }
     /// Bulk insert from iterator.
-    pub fn extend<I: IntoIterator<Item = T>>(&mut self, it: I) { self.0.extend(it) }
+    pub fn extend<I: IntoIterator<Item = T>>(&mut self, it: I) {
+        self.0.extend(it)
+    }
     /// Current size.
-    pub fn len(&self) -> usize { self.0.len() }
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
     /// Is empty.
-    pub fn is_empty(&self) -> bool { self.0.is_empty() }
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
     /// Clear all.
-    pub fn clear(&mut self) { self.0.clear() }
+    pub fn clear(&mut self) {
+        self.0.clear()
+    }
 }
 
 impl<T: Eq + Hash> From<StdHashSet<T>> for HashSetExt<T> {
-    fn from(s: StdHashSet<T>) -> Self { Self(s) }
+    fn from(s: StdHashSet<T>) -> Self {
+        Self(s)
+    }
 }
 
 #[cfg(test)]
@@ -38,7 +54,7 @@ mod tests {
         assert!(s.insert(1));
         assert!(!s.insert(1));
         assert!(s.contains(&1));
-        s.extend([2,3]);
+        s.extend([2, 3]);
         assert_eq!(s.len(), 3);
         s.clear();
         assert!(s.is_empty());

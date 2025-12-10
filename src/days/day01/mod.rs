@@ -91,7 +91,11 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
         extras::web::write_animation_html(&path, &input)?;
         eprintln!("Day01 web animation written to {}", path);
     }
-    println!("Day 01\nPart 1: {}\nPart 2: {}", part1(&input), part2(&input));
+    println!(
+        "Day 01\nPart 1: {}\nPart 2: {}",
+        part1(&input),
+        part2(&input)
+    );
     Ok(())
 }
 
@@ -144,7 +148,10 @@ mod tests {
     const EXPECTED_PART2: Option<&str> = Some("6");
 
     // Example input embedded at compile time. Place your example in inputs/day01_example.txt
-    const EXAMPLE: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/inputs/day01_example.txt"));
+    const EXAMPLE: &str = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/inputs/day01_example.txt"
+    ));
 
     #[test]
     fn example_part1() {

@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Day 07 · Timeline Splitter Simulator</title>
+<style>
+    :root {
+        color-scheme: dark;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: #020617;
+        color: #e2e8f0;
+    }
+    * { box-sizing: border-box; }
+    body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        padding: 2rem 1rem 3rem;
+    }
+    main {
+        width: min(1100px, 100%);
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    h1 {
+        margin: 0;
+        font-size: clamp(1.4rem, 2vw + 1rem, 2.4rem);
+    }
+    .intro {
+        margin: 0.35rem 0 0;
+        color: #94a3b8;
+        line-height: 1.6;
+    }
+    .panel {
+        background: #030b1c;
+        border-radius: 18px;
+        border: 1px solid #0f172a;
+        padding: 1.4rem;
+        box-shadow: 0 25px 55px rgba(2,6,23,0.75);
+    }
+    textarea {
+        width: 100%;
+        min-height: 180px;
+        border-radius: 14px;
+        border: 1px solid #1e293b;
+        background: #010717;
+        color: inherit;
+        resize: vertical;
+        padding: 0.9rem 1rem;
+        font-family: "JetBrains Mono", "SFMono-Regular", ui-monospace, "Cascadia Code", monospace;
+        font-size: 0.95rem;
+        line-height: 1.4;
+    }
+    .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    button {
+        border: none;
+        border-radius: 999px;
+        padding: 0.55rem 1.2rem;
+        font-weight: 600;
+        cursor: pointer;
+        background: #38bdf8;
+        color: #02131f;
+    }
+    button.secondary {
+        background: #1e293b;
+        color: #e2e8f0;
+    }
+    button:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+    }
+    label.inline {
+        font-size: 0.92rem;
+        color: #cbd5f5;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+    input[type="range"] {
+        width: 160px;
+    }
+    .status {
+        margin-top: 0.85rem;
+        font-size: 0.95rem;
+        color: #94a3b8;
+    }
+    .status.error {
+        color: #f87171;
+    }
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    .stat {
+        background: #040b1a;
+        border-radius: 14px;
+        padding: 1rem 1.1rem;
+        border: 1px solid #0f172a;
+    }
+    .stat h2 {
+        margin: 0;
+        font-size: 0.95rem;
+        color: #94a3b8;
+    }
+    .stat p {
+        margin: 0.25rem 0 0;
+        font-size: 1.1rem;
+        font-variant-numeric: tabular-nums;
+    }
+    canvas {
+        width: 100%;
+        max-height: 620px;
+        background: #010512;
+        border-radius: 18px;
+        border: 1px solid #111c2f;
+        display: block;
+    }
+    .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        font-size: 0.9rem;
+        color: #94a3b8;
+        margin-bottom: 0.85rem;
+    }
+    .legend span {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+    .swatch {
+        width: 16px;
+        height: 16px;
+        border-radius: 4px;
+    }
+    .sim-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        align-items: center;
+        margin-bottom: 0.75rem;
+    }
+</style>
+</head>
+<body>
+<main>
+    <header>
+        <h1>Day 07 · Timeline Splitter Simulator</h1>
+        <p class="intro">
+            Visualize the Part&nbsp;2 algorithm as beams fall through the laboratory, split on <code>^</code> mirrors,
+            and either re-enter the queue or escape to form new timelines. Load the puzzle grid, then play or step
+            through each queue pop to see counts propagate.
+        </p>
+    </header>
+    <section class="panel">
+        <div class="controls">
+            <button type="button" id="loadExample" class="secondary">Load Example</button>
+            <button type="button" id="loadPuzzle" class="secondary">Load Puzzle Input</button>
+            <button type="button" id="build">Build Simulation</button>
+            <span id="analysisTime">– ms</span>
+        </div>
+        <textarea id="input" spellcheck="false" placeholder="Enter the Day 07 grid here"></textarea>
+        <div class="status" id="status">Paste the grid and build the simulation.</div>
+    </section>
+    <section class="panel">
+        <div class="sim-controls">
+            <button type="button" id="toggle" disabled>Play</button>
+            <button type="button" id="step" class="secondary" disabled>Step</button>
+            <button type="button" id="reset" class="secondary" disabled>Reset</button>
+            <button type="button" id="finish" class="secondary" disabled>Finish</button>
+            <label class="inline">Speed
+                <input type="range" id="speed" min="1" max="120" value="30"/>
+                <span id="speedValue">30/s</span>
+            </label>
+        </div>
+        <div class="stats-grid">
+            <div class="stat">
+                <h2>Timelines reached</h2>
+                <p id="timelineStat">–</p>
+            </div>
+            <div class="stat">
+                <h2>Events processed</h2>
+                <p id="eventStat">–</p>
+            </div>
+            <div class="stat">
+                <h2>Queue length</h2>
+                <p id="queueStat">–</p>
+            </div>
+        </div>
+        <div class="legend">
+            <span><span class="swatch" style="background:#1d4ed8"></span> Empty corridor</span>
+            <span><span class="swatch" style="background:#a855f7"></span> Splitter (<code>^</code>)</span>
+            <span><span class="swatch" style="background:#22d3ee"></span> Start (S)</span>
+            <span><span class="swatch" style="background:#f97316"></span> Active beam</span>
+        </div>
+        <canvas id="grid" width="960" height="560"></canvas>
+        <div class="status" id="eventDesc">No simulation yet.</div>
+    </section>
+</main>
+<script>
+(() => {
+    'use strict';
+
+    const exampleInput = [
+        '.......S.......',
+        '...............',
+        '.......^.......',
+        '...............',
+        '......^.^......',
+        '...............',
+        '.....^.^.^.....',
+        '...............',
+        '....^.^...^....',
+        '...............',
+        '...^.^...^.^...',
+        '...............',
+        '..^...^.....^..',
+        '...............',
+        '.^.^.^.^.^...^.',
+        '...............'
+    ].join('\n');
+
+    const textarea = document.getElementById('input');
+    const loadExampleBtn = document.getElementById('loadExample');
+    const loadPuzzleBtn = document.getElementById('loadPuzzle');
+    const buildBtn = document.getElementById('build');
+    const statusEl = document.getElementById('status');
+    const analysisTimeEl = document.getElementById('analysisTime');
+    const toggleBtn = document.getElementById('toggle');
+    const stepBtn = document.getElementById('step');
+    const resetBtn = document.getElementById('reset');
+    const finishBtn = document.getElementById('finish');
+    const speedInput = document.getElementById('speed');
+    const speedValue = document.getElementById('speedValue');
+    const timelineStat = document.getElementById('timelineStat');
+    const eventStat = document.getElementById('eventStat');
+    const queueStat = document.getElementById('queueStat');
+    const canvas = document.getElementById('grid');
+    const ctx = canvas.getContext('2d');
+    const eventDesc = document.getElementById('eventDesc');
+
+    textarea.value = exampleInput;
+
+    let parsed = null;
+    let simulation = null;
+    let playback = null;
+    let playing = false;
+    let speed = Number(speedInput.value);
+    let lastTime = 0;
+    let stepAccumulator = 0;
+
+    loadExampleBtn.addEventListener('click', () => {
+        textarea.value = exampleInput;
+        setStatus('Loaded example grid.');
+        buildSimulation();
+    });
+
+    loadPuzzleBtn.addEventListener('click', async () => {
+        setStatus('Loading ../inputs/day07.txt …');
+        try {
+            const response = await fetch('../inputs/day07.txt');
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            const text = await response.text();
+            textarea.value = text.trim();
+            setStatus('Loaded puzzle input.');
+            buildSimulation();
+        } catch (err) {
+            console.warn(err);
+            setStatus('Unable to fetch the puzzle input automatically. Paste it manually instead.', true);
+        }
+    });
+
+    buildBtn.addEventListener('click', buildSimulation);
+    toggleBtn.addEventListener('click', togglePlay);
+    stepBtn.addEventListener('click', () => {
+        if (playing) {
+            playing = false;
+            updateStats();
+        }
+        stepOnce();
+    });
+    resetBtn.addEventListener('click', () => {
+        if (!simulation) return;
+        initPlayback();
+        updateStats();
+        drawScene();
+        eventDesc.textContent = 'Simulation reset.';
+    });
+    finishBtn.addEventListener('click', () => {
+        if (!simulation) return;
+        playing = false;
+        updateStats();
+        while (stepOnce()) {
+            // keep stepping until done
+        }
+    });
+    speedInput.addEventListener('input', () => {
+        speed = Number(speedInput.value);
+        speedValue.textContent = `${speed}/s`;
+    });
+
+    textarea.addEventListener('keydown', (event) => {
+        if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
+            buildSimulation();
+        }
+    });
+
+    function buildSimulation() {
+        let gridData;
+        try {
+            gridData = parseGrid(textarea.value);
+        } catch (err) {
+            parsed = null;
+            simulation = null;
+            playback = null;
+            disableSimControls();
+            analysisTimeEl.textContent = '– ms';
+            setStatus(err.message, true);
+            drawScene();
+            return;
+        }
+        parsed = gridData;
+        const start = performance.now();
+        simulation = createSimulation(parsed.grid, gridData.start);
+        const elapsed = performance.now() - start;
+        analysisTimeEl.textContent = `${elapsed.toFixed(1)} ms`;
+        setStatus(`Prepared ${simulation.events.length} events.`);
+        initPlayback();
+        updateStats();
+        drawScene();
+    }
+
+    function togglePlay() {
+        if (!simulation) return;
+        playing = !playing;
+        if (playing) {
+            stepAccumulator = 0;
+            lastTime = performance.now();
+            requestAnimationFrame(loop);
+        }
+        updateStats();
+    }
+
+    function loop(timestamp) {
+        if (!playing) return;
+        const delta = timestamp - lastTime;
+        lastTime = timestamp;
+        stepAccumulator += (delta / 1000) * speed;
+        while (stepAccumulator >= 1) {
+            const advanced = stepOnce();
+            if (!advanced) {
+                playing = false;
+                updateStats();
+                break;
+            }
+            stepAccumulator -= 1;
+        }
+        if (playing) {
+            requestAnimationFrame(loop);
+        }
+    }
+
+    function stepOnce() {
+        if (!simulation || !playback) return false;
+        if (playback.stepIndex >= simulation.events.length) {
+            eventDesc.textContent = 'Simulation complete.';
+            return false;
+        }
+        const event = simulation.events[playback.stepIndex];
+        playback.stepIndex += 1;
+        const desc = applyEvent(event);
+        eventDesc.textContent = desc;
+        updateStats();
+        drawScene();
+        return true;
+    }
+
+    function initPlayback() {
+        if (!simulation || !parsed) {
+            playback = null;
+            disableSimControls();
+            return;
+        }
+        const { height, width, start } = simulation;
+        playback = {
+            pending: Array.from({ length: height }, () => Array.from({ length: width }, () => 0n)),
+            timeline: 0n,
+            queueLen: 1,
+            activeTrail: [],
+            activeCell: null,
+            currentCount: 0n,
+            stepIndex: 0,
+            lastDesc: 'Ready',
+        };
+        playback.pending[start.row][start.col] = 1n;
+        playback.activeCell = { row: start.row, col: start.col };
+        playing = false;
+        updateStats();
+        eventDesc.textContent = 'Ready to simulate.';
+    }
+
+    function applyEvent(event) {
+        if (!playback) return '';
+        switch (event.type) {
+            case 'dequeue': {
+                playback.currentCount = event.count;
+                playback.queueLen = event.queueLen;
+                playback.pending[event.row][event.col] = 0n;
+                playback.activeTrail = [{ row: event.row, col: event.col }];
+                playback.activeCell = { row: event.row, col: event.col };
+                return event.count === 0n
+                    ? `Dequeued (${event.row}, ${event.col}) with no pending beams.`
+                    : `Processing (${event.row}, ${event.col}) with ${formatBig(event.count)} pending beams.`;
+            }
+            case 'fall': {
+                playback.activeTrail.push({ row: event.row, col: event.col });
+                playback.activeCell = { row: event.row, col: event.col };
+                return `Beam falls to (${event.row}, ${event.col}).`;
+            }
+            case 'split': {
+                return `Splitter at (${event.row}, ${event.col}) duplicates ${formatBig(event.count)} beam(s).`;
+            }
+            case 'enqueue': {
+                playback.pending[event.row][event.col] = event.pending;
+                playback.queueLen = event.queueLen;
+                const dir = event.direction < 0 ? 'left' : 'right';
+                return `Queued ${formatBig(event.count)} beam(s) ${dir} to column ${event.col}.`;
+            }
+            case 'spill': {
+                playback.timeline = event.timelines;
+                const dir = event.direction < 0 ? 'off the left edge' : 'off the right edge';
+                return `Beam spills ${dir}, adding ${formatBig(event.count)} timeline(s).`;
+            }
+            case 'escape': {
+                playback.timeline = event.timelines;
+                return `Beam exits the bottom at column ${event.col}, adding ${formatBig(event.count)} timeline(s).`;
+            }
+            default:
+                return '';
+        }
+    }
+
+    function updateStats() {
+        if (!simulation || !playback) {
+            timelineStat.textContent = '–';
+            eventStat.textContent = '–';
+            queueStat.textContent = '–';
+            toggleBtn.disabled = true;
+            stepBtn.disabled = true;
+            resetBtn.disabled = true;
+            finishBtn.disabled = true;
+            toggleBtn.textContent = 'Play';
+            return;
+        }
+        const total = simulation.totalTimelines;
+        timelineStat.textContent = `${formatBig(playback.timeline)} / ${formatBig(total)}`;
+        eventStat.textContent = `${playback.stepIndex.toLocaleString('en-US')} / ${simulation.events.length.toLocaleString('en-US')}`;
+        queueStat.textContent = playback.queueLen.toLocaleString('en-US');
+        toggleBtn.disabled = simulation.events.length === 0;
+        stepBtn.disabled = simulation.events.length === 0;
+        resetBtn.disabled = false;
+        finishBtn.disabled = false;
+        toggleBtn.textContent = playing ? 'Pause' : 'Play';
+    }
+
+    function disableSimControls() {
+        toggleBtn.disabled = true;
+        stepBtn.disabled = true;
+        resetBtn.disabled = true;
+        finishBtn.disabled = true;
+        toggleBtn.textContent = 'Play';
+    }
+
+    function drawScene() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#010512';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        if (!parsed || !simulation || !playback) {
+            return;
+        }
+        const { grid } = parsed;
+        const { height, width, start } = simulation;
+        const padding = 24;
+        const cellSize = Math.min(
+            (canvas.width - padding * 2) / width,
+            (canvas.height - padding * 2) / height
+        );
+        const offsetX = (canvas.width - cellSize * width) / 2;
+        const offsetY = (canvas.height - cellSize * height) / 2;
+
+        for (let r = 0; r < height; r++) {
+            for (let c = 0; c < width; c++) {
+                const x = offsetX + c * cellSize;
+                const y = offsetY + r * cellSize;
+                const cell = grid[r][c];
+                ctx.fillStyle = cellColor(cell);
+                ctx.fillRect(x, y, cellSize, cellSize);
+                ctx.strokeStyle = 'rgba(15,23,42,0.35)';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(x, y, cellSize, cellSize);
+                const pending = playback.pending[r][c];
+                if (pending > 0n) {
+                    const intensity = pendingIntensity(pending, simulation.maxPending);
+                    ctx.fillStyle = `rgba(248, 113, 113, ${0.15 + intensity * 0.6})`;
+                    ctx.fillRect(x, y, cellSize, cellSize);
+                    ctx.fillStyle = '#f8fafc';
+                    ctx.font = `${Math.max(10, cellSize * 0.35)}px "JetBrains Mono", monospace`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(shortValue(pending), x + cellSize / 2, y + cellSize / 2);
+                }
+            }
+        }
+
+        // highlight start
+        const startX = offsetX + start.col * cellSize;
+        const startY = offsetY + start.row * cellSize;
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#22d3ee';
+        ctx.strokeRect(startX + 2, startY + 2, cellSize - 4, cellSize - 4);
+
+        // draw active trail
+        if (playback.activeTrail.length > 1) {
+            ctx.strokeStyle = '#f97316';
+            ctx.lineWidth = Math.max(2, cellSize * 0.15);
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            playback.activeTrail.forEach((pt, idx) => {
+                const cx = offsetX + pt.col * cellSize + cellSize / 2;
+                const cy = offsetY + pt.row * cellSize + cellSize / 2;
+                if (idx === 0) {
+                    ctx.moveTo(cx, cy);
+                } else {
+                    ctx.lineTo(cx, cy);
+                }
+            });
+            ctx.stroke();
+        }
+
+        if (playback.activeCell) {
+            const { row, col } = playback.activeCell;
+            const ax = offsetX + col * cellSize;
+            const ay = offsetY + row * cellSize;
+            ctx.strokeStyle = '#f97316';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(ax + 1, ay + 1, cellSize - 2, cellSize - 2);
+        }
+    }
+
+    function parseGrid(raw) {
+        const lines = raw
+            .split(/\r?\n/)
+            .map((line) => line.trimEnd())
+            .filter((line) => line.length > 0);
+        if (!lines.length) {
+            throw new Error('Provide at least one row.');
+        }
+        const width = lines[0].length;
+        const grid = lines.map((line, idx) => {
+            if (line.length !== width) {
+                throw new Error(`Row ${idx + 1} has inconsistent width.`);
+            }
+            return line.split('');
+        });
+        let start = null;
+        for (let r = 0; r < grid.length; r++) {
+            const col = grid[r].indexOf('S');
+            if (col !== -1) {
+                start = { row: r, col };
+                break;
+            }
+        }
+        if (!start) {
+            throw new Error('Could not find the start position (S).');
+        }
+        return { grid, start };
+    }
+
+    function createSimulation(grid, start) {
+        const height = grid.length;
+        const width = grid[0].length;
+        const pending = Array.from({ length: height }, () => Array.from({ length: width }, () => 0n));
+        const inQueue = Array.from({ length: height }, () => Array.from({ length: width }, () => false));
+        const queue = [{ row: start.row, col: start.col }];
+        let timelines = 0n;
+        const events = [];
+        pending[start.row][start.col] = 1n;
+        inQueue[start.row][start.col] = true;
+        let maxPending = 1n;
+
+        while (queue.length) {
+            const current = queue.shift();
+            const { row: originRow, col } = current;
+            inQueue[originRow][col] = false;
+            const count = pending[originRow][col];
+            pending[originRow][col] = 0n;
+            events.push({ type: 'dequeue', row: originRow, col, count, queueLen: queue.length });
+            if (count === 0n) {
+                continue;
+            }
+            let row = originRow;
+            while (true) {
+                if (row + 1 >= height) {
+                    timelines += count;
+                    events.push({ type: 'escape', row, col, count, timelines });
+                    break;
+                }
+                row += 1;
+                events.push({ type: 'fall', row, col });
+                const cell = grid[row][col];
+                if (cell === '^') {
+                    events.push({ type: 'split', row, col, count });
+                    branch(row, col, count, -1);
+                    branch(row, col, count, 1);
+                    break;
+                }
+            }
+        }
+
+        function branch(row, col, count, delta) {
+            const nextCol = col + delta;
+            if (nextCol < 0 || nextCol >= width) {
+                timelines += count;
+                events.push({ type: 'spill', row, col, direction: delta, count, timelines });
+                return;
+            }
+            pending[row][nextCol] += count;
+            if (pending[row][nextCol] > maxPending) {
+                maxPending = pending[row][nextCol];
+            }
+            let queueLen = queue.length;
+            if (!inQueue[row][nextCol]) {
+                inQueue[row][nextCol] = true;
+                queue.push({ row, col: nextCol });
+                queueLen = queue.length;
+            }
+            events.push({
+                type: 'enqueue',
+                row,
+                col: nextCol,
+                count,
+                pending: pending[row][nextCol],
+                direction: delta,
+                queueLen,
+            });
+        }
+
+        return {
+            grid,
+            start,
+            height,
+            width,
+            events,
+            totalTimelines: timelines,
+            maxPending,
+        };
+    }
+
+    function cellColor(cell) {
+        if (cell === 'S') return '#0f766e';
+        if (cell === '^') return '#312e81';
+        return '#0f172a';
+    }
+
+    function pendingIntensity(value, maxValue) {
+        if (value === 0n || maxValue === 0n) return 0;
+        const scaled = (value * 1000n) / maxValue;
+        return Math.min(1, Number(scaled) / 1000);
+    }
+
+    function shortValue(value) {
+        const str = value.toString();
+        if (str.length <= 4) return str;
+        if (str.length <= 6) return `${str.slice(0, 3)}…`;
+        return `${str.slice(0, 2)}…${str.slice(-2)}`;
+    }
+
+    function formatBig(value) {
+        if (typeof value === 'bigint') {
+            return value.toLocaleString('en-US');
+        }
+        return value.toLocaleString('en-US');
+    }
+
+    function setStatus(message, isError = false) {
+        statusEl.textContent = message;
+        statusEl.classList.toggle('error', isError);
+    }
+
+    buildSimulation();
+    drawScene();
+})();
+</script>
+</body>
+</html>

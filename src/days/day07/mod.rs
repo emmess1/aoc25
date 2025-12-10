@@ -171,7 +171,11 @@ fn parse_grid(input: &str) -> Option<(Vec<Vec<char>>, (usize, usize))> {
 
 pub fn run() -> Result<(), Box<dyn std::error::Error>> {
     let input = util::read_input("day07")?;
-    println!("Day 07\nPart 1: {}\nPart 2: {}", part1(&input), part2(&input));
+    println!(
+        "Day 07\nPart 1: {}\nPart 2: {}",
+        part1(&input),
+        part2(&input)
+    );
     Ok(())
 }
 
@@ -181,7 +185,10 @@ mod tests {
 
     const EXPECTED_PART1: Option<&str> = Some("21");
     const EXPECTED_PART2: Option<&str> = Some("40");
-    const EXAMPLE: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/inputs/day07_example.txt"));
+    const EXAMPLE: &str = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/inputs/day07_example.txt"
+    ));
 
     #[test]
     fn example_part1() {

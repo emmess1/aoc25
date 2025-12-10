@@ -53,10 +53,14 @@ impl<T> LinkedList<T> {
     }
 
     /// Returns `true` if the list contains no elements.
-    pub fn is_empty(&self) -> bool { self.len == 0 }
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
 
     /// Returns number of elements in the list.
-    pub fn len(&self) -> usize { self.len }
+    pub fn len(&self) -> usize {
+        self.len
+    }
 
     /// Pushes an element to the front of the list.
     ///
@@ -70,7 +74,10 @@ impl<T> LinkedList<T> {
     pub fn push_front(&mut self, elem: T) {
         // Allocate a new node that points to the current head, then update
         // the head to the new node.
-        let new = Box::new(Node { elem, next: self.head.take() });
+        let new = Box::new(Node {
+            elem,
+            next: self.head.take(),
+        });
         self.head = Some(new);
         self.len += 1;
     }
@@ -116,7 +123,11 @@ impl<T> LinkedList<T> {
     /// Returns an iterator over references to each element.
     ///
     /// Elements are yielded from head to tail.
-    pub fn iter(&self) -> Iter<'_, T> { Iter { next: self.head.as_deref() } }
+    pub fn iter(&self) -> Iter<'_, T> {
+        Iter {
+            next: self.head.as_deref(),
+        }
+    }
 
     // A mutable iterator can be added later if needed.
 }
@@ -188,7 +199,9 @@ mod tests {
     #[test]
     fn iterates_in_stack_order() {
         let mut ll = LinkedList::new();
-        for i in 1..=4 { ll.push_front(i); }
+        for i in 1..=4 {
+            ll.push_front(i);
+        }
         let v: Vec<_> = ll.iter().cloned().collect();
         assert_eq!(v, vec![4, 3, 2, 1]);
     }
@@ -196,7 +209,9 @@ mod tests {
     #[test]
     fn clear_empties_list() {
         let mut ll = LinkedList::new();
-        for i in 0..3 { ll.push_front(i); }
+        for i in 0..3 {
+            ll.push_front(i);
+        }
         ll.clear();
         assert!(ll.is_empty());
         assert_eq!(ll.len(), 0);
@@ -219,9 +234,13 @@ mod tests {
     #[test]
     fn reuse_after_clear() {
         let mut ll = LinkedList::new();
-        for i in 0..10 { ll.push_front(i); }
+        for i in 0..10 {
+            ll.push_front(i);
+        }
         ll.clear();
-        for i in 10..20 { ll.push_front(i); }
+        for i in 10..20 {
+            ll.push_front(i);
+        }
         assert_eq!(ll.len(), 10);
         assert_eq!(ll.peek(), Some(&19));
     }
@@ -235,9 +254,13 @@ mod tests {
     #[test]
     fn stress_push_pop_1000() {
         let mut ll = LinkedList::new();
-        for i in 0..1000 { ll.push_front(i); }
+        for i in 0..1000 {
+            ll.push_front(i);
+        }
         assert_eq!(ll.len(), 1000);
-        for i in (0..1000).rev() { assert_eq!(ll.pop_front(), Some(i)); }
+        for i in (0..1000).rev() {
+            assert_eq!(ll.pop_front(), Some(i));
+        }
         assert!(ll.is_empty());
     }
 }

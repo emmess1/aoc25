@@ -42,7 +42,11 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
         let report = extras::visualize_part2::render_part2_report(&input);
         println!("Day 02 Part 2 visualization:\n{}", report);
     }
-    println!("Day 02\nPart 1: {}\nPart 2: {}", part1(&input), part2(&input));
+    println!(
+        "Day 02\nPart 1: {}\nPart 2: {}",
+        part1(&input),
+        part2(&input)
+    );
     Ok(())
 }
 
@@ -161,8 +165,7 @@ fn sum_any_repeat_in_range(
             if x_lo > x_hi {
                 continue;
             }
-            let primitive_sum =
-                primitive_sum_for_len(len, x_lo, x_hi, pow10, divisors);
+            let primitive_sum = primitive_sum_for_len(len, x_lo, x_hi, pow10, divisors);
             if primitive_sum == 0 {
                 continue;
             }
@@ -202,8 +205,7 @@ fn primitive_sum_for_len(
         if mapped_lo > mapped_hi {
             continue;
         }
-        let child_sum =
-            primitive_sum_for_len(d, mapped_lo, mapped_hi, pow10, divisors);
+        let child_sum = primitive_sum_for_len(d, mapped_lo, mapped_hi, pow10, divisors);
         subtract += child_sum * factor;
     }
     total_sum - subtract
@@ -262,7 +264,10 @@ mod tests {
 
     const EXPECTED_PART1: Option<&str> = Some("1227775554");
     const EXPECTED_PART2: Option<&str> = Some("4174379265");
-    const EXAMPLE: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/inputs/day02_example.txt"));
+    const EXAMPLE: &str = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/inputs/day02_example.txt"
+    ));
 
     #[test]
     fn example_part1() {

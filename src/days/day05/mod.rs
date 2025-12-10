@@ -22,7 +22,11 @@ fn parse_database(input: &str) -> (Vec<(u64, u64)>, Vec<u64>) {
                 .expect("Range line must contain a '-' separator");
             let start = start.trim().parse::<u64>().expect("Invalid range start");
             let end = end.trim().parse::<u64>().expect("Invalid range end");
-            let (start, end) = if start <= end { (start, end) } else { (end, start) };
+            let (start, end) = if start <= end {
+                (start, end)
+            } else {
+                (end, start)
+            };
             ranges.push((start, end));
         } else {
             let id = trimmed.parse::<u64>().expect("Invalid ingredient ID");
@@ -113,8 +117,10 @@ mod tests {
     use super::*;
     const EXPECTED_PART1: Option<&str> = Some("3");
     const EXPECTED_PART2: Option<&str> = Some("14");
-    const EXAMPLE: &str =
-        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/inputs/day05_example.txt"));
+    const EXAMPLE: &str = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/inputs/day05_example.txt"
+    ));
 
     #[test]
     fn example_part1() {
