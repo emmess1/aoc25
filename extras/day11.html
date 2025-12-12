@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Day 11 · Reactor Path Visualizer</title>
+<style>
+    :root {
+        color-scheme: dark;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: #010512;
+        color: #e2e8f0;
+    }
+    * { box-sizing: border-box; }
+    body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        padding: 2rem 1rem 3rem;
+    }
+    main {
+        width: min(1080px, 100%);
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    header h1 {
+        margin: 0;
+        font-size: clamp(1.4rem, 2vw + 1rem, 2.4rem);
+    }
+    header p {
+        margin: 0.6rem 0 0;
+        color: #94a3b8;
+        line-height: 1.6;
+    }
+    .panel {
+        background: #030a1d;
+        border-radius: 20px;
+        border: 1px solid #0f172a;
+        padding: 1.4rem;
+        box-shadow: 0 25px 55px rgba(2,6,23,0.7);
+    }
+    .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        align-items: center;
+        margin-bottom: 0.9rem;
+    }
+    button {
+        border: none;
+        border-radius: 999px;
+        padding: 0.55rem 1.2rem;
+        font-weight: 600;
+        cursor: pointer;
+        background: #38bdf8;
+        color: #02131f;
+    }
+    button.secondary {
+        background: #1e293b;
+        color: #e2e8f0;
+    }
+    button:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+    }
+    textarea {
+        width: 100%;
+        min-height: 180px;
+        border-radius: 16px;
+        border: 1px solid #1e293b;
+        background: #010717;
+        color: inherit;
+        resize: vertical;
+        padding: 0.9rem 1rem;
+        font-family: "JetBrains Mono", "SFMono-Regular", ui-monospace, "Cascadia Code", monospace;
+        font-size: 0.95rem;
+        line-height: 1.4;
+    }
+    .status {
+        font-size: 0.95rem;
+        color: #94a3b8;
+        margin-top: 0.65rem;
+    }
+    .status.error {
+        color: #f87171;
+    }
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    label {
+        font-size: 0.9rem;
+        color: #cbd5f5;
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+    }
+    input[type="text"] {
+        border-radius: 999px;
+        border: 1px solid #1e293b;
+        background: #010717;
+        color: inherit;
+        padding: 0.45rem 0.9rem;
+    }
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+        gap: 1rem;
+    }
+    .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        font-size: 0.9rem;
+        color: #94a3b8;
+    }
+    .legend span {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+    .swatch {
+        width: 16px;
+        height: 16px;
+        border-radius: 4px;
+    }
+    canvas {
+        width: 100%;
+        border-radius: 18px;
+        border: 1px solid #111c2f;
+        background: #010512;
+        margin-top: 0.8rem;
+    }
+    .stat {
+        background: #040b1c;
+        border-radius: 16px;
+        padding: 1rem 1.1rem;
+        border: 1px solid #0f172a;
+    }
+    .stat h2 {
+        margin: 0;
+        font-size: 0.95rem;
+        color: #94a3b8;
+    }
+    .stat p {
+        margin: 0.3rem 0 0;
+        font-size: 1.2rem;
+        font-variant-numeric: tabular-nums;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 0.9rem;
+        font-size: 0.95rem;
+    }
+    th, td {
+        text-align: left;
+        padding: 0.5rem 0.4rem;
+        border-bottom: 1px solid rgba(148,163,184,0.2);
+    }
+    th {
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #94a3b8;
+    }
+    tbody tr:nth-child(odd) {
+        background: rgba(148,163,184,0.05);
+    }
+    .req {
+        color: #fbbf24;
+        font-weight: 600;
+    }
+    .path-list {
+        margin: 1rem 0 0;
+        padding-left: 1.2rem;
+        line-height: 1.5;
+        font-size: 0.95rem;
+    }
+    .path-list li {
+        margin-bottom: 0.35rem;
+    }
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.2rem;
+        font-size: 0.8rem;
+        padding: 0.12rem 0.55rem;
+        border-radius: 999px;
+        background: rgba(56,189,248,0.2);
+        color: #38bdf8;
+        margin-left: 0.45rem;
+    }
+    code {
+        background: rgba(148,163,184,0.15);
+        padding: 0.05rem 0.35rem;
+        border-radius: 6px;
+        font-size: 0.9rem;
+    }
+</style>
+</head>
+<body>
+<main>
+    <header>
+        <h1>Day 11 · Reactor Path Visualizer</h1>
+        <p>
+            Inspect the device graph for Part&nbsp;2. Paste the wiring list, set the start, end, and required devices
+            (defaults: <code>svr</code> → <code>out</code>, must visit <code>dac</code> and <code>fft</code>), then analyze how
+            many paths satisfy the constraint. The tool also surfaces per-node path counts and sample valid paths.
+        </p>
+    </header>
+
+    <section class="panel">
+        <div class="controls">
+            <button type="button" id="loadPart2" class="secondary">Load Part 2 Example</button>
+            <button type="button" id="loadPuzzle" class="secondary">Load Puzzle Input</button>
+            <button type="button" id="analyze">Analyze Paths</button>
+            <span id="analysisTime">–</span>
+        </div>
+        <input type="file" id="filePicker" accept=".txt" style="display:none"/>
+        <textarea id="input" spellcheck="false" placeholder="svr: aaa bbb&#10;aaa: fft&#10;fft: ccc&#10;..."></textarea>
+        <div class="form-grid">
+            <label>Start device
+                <input type="text" id="start" value="svr" autocomplete="off"/>
+            </label>
+            <label>Target device
+                <input type="text" id="target" value="out" autocomplete="off"/>
+            </label>
+            <label>Required devices (comma separated)
+                <input type="text" id="required" value="dac, fft" autocomplete="off"/>
+            </label>
+        </div>
+        <div class="status" id="status">Paste the wiring map and click Analyze.</div>
+    </section>
+
+    <section class="panel">
+        <div class="stats-grid">
+            <div class="stat">
+                <h2>Total paths (start → out)</h2>
+                <p id="totalPaths">–</p>
+            </div>
+            <div class="stat">
+                <h2>Paths visiting all required nodes</h2>
+                <p id="validPaths">–</p>
+            </div>
+            <div class="stat">
+                <h2>Reachable devices</h2>
+                <p id="reachableCount">–</p>
+            </div>
+            <div class="stat">
+                <h2>Edges considered</h2>
+                <p id="edgeCount">–</p>
+            </div>
+        </div>
+        <div class="legend" style="margin-top:1rem;">
+            <span><span class="swatch" style="background:#38bdf8;"></span> Start</span>
+            <span><span class="swatch" style="background:#f87171;"></span> Target</span>
+            <span><span class="swatch" style="background:#fbbf24;"></span> Required</span>
+            <span><span class="swatch" style="background:#64748b;"></span> Other nodes</span>
+        </div>
+        <canvas id="graphCanvas" width="1000" height="520"></canvas>
+    </section>
+
+    <section class="panel">
+        <h2>Per-node contribution</h2>
+        <p style="margin:0 0 0.6rem;color:#94a3b8;">
+            Each row shows how many paths from that node eventually reach <code id="targetLabel">out</code>, and how many
+            of those routes visit every required device. Sorting is by total paths.
+        </p>
+        <div style="overflow-x:auto">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Node</th>
+                        <th>Total paths</th>
+                        <th>Paths w/ required</th>
+                        <th>Share</th>
+                    </tr>
+                </thead>
+                <tbody id="nodeTable">
+                    <tr><td colspan="4" style="text-align:center;color:#94a3b8;">Analyze the graph to populate this table.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="panel">
+        <h2>Sample satisfying paths</h2>
+        <p style="margin:0 0 0.6rem;color:#94a3b8;">
+            Required devices are highlighted in amber. Only the first 80 matching paths are expanded to keep the list readable.
+        </p>
+        <ol class="path-list" id="pathList">
+            <li>Run an analysis to list matching paths.</li>
+        </ol>
+        <div id="pathFooter" style="color:#94a3b8;font-size:0.9rem;margin-top:0.6rem;"></div>
+    </section>
+</main>
+
+<script>
+const part2Example = `svr: aaa bbb
+aaa: fft
+fft: ccc
+bbb: tty
+tty: ccc
+ccc: ddd eee
+ddd: hub
+hub: fff
+eee: dac
+dac: fff
+fff: ggg hhh
+ggg: out
+hhh: out`;
+
+const textarea = document.getElementById('input');
+const statusEl = document.getElementById('status');
+const startInput = document.getElementById('start');
+const targetInput = document.getElementById('target');
+const requiredInput = document.getElementById('required');
+const nodeTable = document.getElementById('nodeTable');
+const pathList = document.getElementById('pathList');
+const pathFooter = document.getElementById('pathFooter');
+const analysisTime = document.getElementById('analysisTime');
+const graphCanvas = document.getElementById('graphCanvas');
+const filePicker = document.getElementById('filePicker');
+let lastRender = null;
+
+document.getElementById('loadPart2').addEventListener('click', () => {
+    textarea.value = part2Example.trim();
+    setStatus('Loaded Part 2 example.', false);
+});
+
+document.getElementById('loadPuzzle').addEventListener('click', async () => {
+    setStatus('Loading ../inputs/day11.txt …', false);
+    try {
+        const resp = await fetch('../inputs/day11.txt', { cache: 'no-store' });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        textarea.value = await resp.text();
+        setStatus('Loaded puzzle input.', false);
+    } catch (err) {
+        if (window.location.protocol === 'file:') {
+            setStatus('Browser blocked file:// fetch; please choose the input file manually.', true);
+            filePicker.click();
+        } else {
+            setStatus(`Failed to load puzzle input: ${err.message}`, true);
+        }
+    }
+});
+
+filePicker.addEventListener('change', async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    try {
+        const text = await file.text();
+        textarea.value = text;
+        setStatus(`Loaded ${file.name}.`, false);
+    } catch (err) {
+        setStatus(`Failed to read file: ${err.message}`, true);
+    } finally {
+        filePicker.value = '';
+    }
+});
+
+document.getElementById('analyze').addEventListener('click', () => {
+    try {
+        analyze();
+    } catch (err) {
+        console.error(err);
+        setStatus(err.message || 'Unexpected error', true);
+    }
+});
+
+function setStatus(message, isError) {
+    statusEl.textContent = message;
+    statusEl.classList.toggle('error', Boolean(isError));
+}
+
+function parseGraph(text) {
+    const lines = text.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+    if (!lines.length) {
+        throw new Error('Please provide some device definitions.');
+    }
+    const graph = new Map();
+    const nodes = new Set();
+    let edges = 0;
+    for (const line of lines) {
+        const idx = line.indexOf(':');
+        if (idx === -1) {
+            throw new Error(`Missing ':' in line: ${line}`);
+        }
+        const src = line.slice(0, idx).trim();
+        if (!src) {
+            throw new Error(`Missing source device in line: ${line}`);
+        }
+        const rest = line.slice(idx + 1).trim();
+        if (!graph.has(src)) {
+            graph.set(src, []);
+        }
+        nodes.add(src);
+        if (rest.length === 0) {
+            continue;
+        }
+        const outputs = rest.split(/\s+/);
+        const arr = graph.get(src);
+        for (const dest of outputs) {
+            if (!dest) continue;
+            arr.push(dest);
+            edges += 1;
+            nodes.add(dest);
+            if (!graph.has(dest)) {
+                graph.set(dest, []);
+            }
+        }
+    }
+    return { graph, nodes, edges };
+}
+
+function buildMaskInfo(requiredNames) {
+    const trimmed = [...new Set(requiredNames.map(name => name.trim()).filter(Boolean))];
+    if (trimmed.length > 20) {
+        throw new Error('Please limit required devices to 20 or fewer.');
+    }
+    const maskMap = new Map();
+    trimmed.forEach((name, idx) => maskMap.set(name, 1 << idx));
+    const maskSize = 1 << trimmed.length;
+    const requiredMask = maskSize ? maskSize - 1 : 0;
+    return { maskMap, maskSize, requiredMask, names: trimmed };
+}
+
+function analyze() {
+    const raw = textarea.value.trim();
+    const start = startInput.value.trim();
+    const target = targetInput.value.trim();
+    if (!start || !target) {
+        throw new Error('Start and target devices must be specified.');
+    }
+    const t0 = performance.now();
+    const { graph, nodes, edges } = parseGraph(raw);
+    if (!graph.has(start)) {
+        throw new Error(`Unknown start device '${start}'.`);
+    }
+    if (!graph.has(target)) {
+        throw new Error(`Unknown target device '${target}'.`);
+    }
+    const requiredNames = requiredInput.value.split(/[,]+/).map(s => s.trim()).filter(Boolean);
+    const { maskMap, maskSize, requiredMask, names: requiredUnique } = buildMaskInfo(requiredNames);
+    const memo = new Map();
+    const visiting = new Set();
+    const nodeMask = (node) => maskMap.get(node) ?? 0;
+    const dfs = (node) => {
+        if (memo.has(node)) {
+            return memo.get(node);
+        }
+        if (visiting.has(node)) {
+            throw new Error(`Cycle detected involving '${node}'.`);
+        }
+        visiting.add(node);
+        const selfMask = nodeMask(node);
+        const counts = Array(maskSize || 1).fill(0n);
+        if (node === target) {
+            counts[selfMask] = 1n;
+        } else {
+            const neighbors = graph.get(node) ?? [];
+            for (const dest of neighbors) {
+                const childCounts = dfs(dest);
+                for (let mask = 0; mask < childCounts.length; mask++) {
+                    const value = childCounts[mask];
+                    if (value === 0n) continue;
+                    const combinedMask = mask | selfMask;
+                    counts[combinedMask] = counts[combinedMask] + value;
+                }
+            }
+        }
+        visiting.delete(node);
+        memo.set(node, counts);
+        return counts;
+    };
+
+    if (!graph.size) {
+        throw new Error('No devices were parsed.');
+    }
+
+    const reachable = collectReachable(start, graph);
+    const countsAtStart = dfs(start);
+    const totalPaths = countsAtStart.reduce((acc, val) => acc + val, 0n);
+    const matchingPaths = requiredMask < countsAtStart.length ? countsAtStart[requiredMask] : 0n;
+
+    // Ensure all reachable nodes get memoized (so table is complete)
+    for (const node of reachable) {
+        if (!memo.has(node)) {
+            dfs(node);
+        }
+    }
+
+    const totalsMap = buildTotalsMap(memo, requiredMask);
+    const requiredSet = new Set(requiredUnique);
+    updateStats(totalPaths, matchingPaths, reachable.size, edges);
+    updateNodeTable(totalsMap, requiredUnique, target);
+    updatePathList(graph, start, target, requiredMask, maskMap, matchingPaths, requiredSet, memo);
+    document.getElementById('targetLabel').textContent = target;
+    const dt = performance.now() - t0;
+    analysisTime.textContent = `${dt.toFixed(1)} ms`;
+    setStatus('Analysis complete.', false);
+    lastRender = { graph, start, target, requiredSet, totalsMap, reachable };
+    drawGraph();
+}
+
+function collectReachable(start, graph) {
+    const seen = new Set();
+    const stack = [start];
+    while (stack.length) {
+        const node = stack.pop();
+        if (seen.has(node)) continue;
+        seen.add(node);
+        const neighbors = graph.get(node) ?? [];
+        for (const dest of neighbors) {
+            stack.push(dest);
+        }
+    }
+    return seen;
+}
+
+function updateStats(total, matching, reachableCount, edges) {
+    document.getElementById('totalPaths').textContent = formatBigInt(total);
+    document.getElementById('validPaths').textContent = formatBigInt(matching);
+    document.getElementById('reachableCount').textContent = `${reachableCount}`;
+    document.getElementById('edgeCount').textContent = `${edges}`;
+}
+
+function updateNodeTable(totalsMap, requiredNames, target) {
+    const rows = [];
+    totalsMap.forEach((value, node) => {
+        rows.push({ node, total: value.total, matching: value.matching });
+    });
+    rows.sort((a, b) => {
+        if (a.total === b.total) {
+            return a.node.localeCompare(b.node);
+        }
+        return a.total > b.total ? -1 : 1;
+    });
+    nodeTable.innerHTML = '';
+    if (!rows.length) {
+        nodeTable.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#94a3b8;">No reachable nodes.</td></tr>';
+        return;
+    }
+    for (const row of rows) {
+        const tr = document.createElement('tr');
+        const nameCell = document.createElement('td');
+        nameCell.textContent = row.node;
+        if (requiredNames.includes(row.node)) {
+            nameCell.classList.add('req');
+        }
+        if (row.node === target) {
+            nameCell.innerHTML = `${row.node} <span class="badge">target</span>`;
+        }
+        tr.appendChild(nameCell);
+
+        const totalCell = document.createElement('td');
+        totalCell.textContent = formatBigInt(row.total);
+        tr.appendChild(totalCell);
+
+        const matchCell = document.createElement('td');
+        matchCell.textContent = formatBigInt(row.matching);
+        tr.appendChild(matchCell);
+
+        const shareCell = document.createElement('td');
+        shareCell.textContent = formatShare(row.matching, row.total);
+        tr.appendChild(shareCell);
+
+        nodeTable.appendChild(tr);
+    }
+}
+
+function buildTotalsMap(memo, requiredMask) {
+    const map = new Map();
+    memo.forEach((counts, node) => {
+        const total = counts.reduce((acc, val) => acc + val, 0n);
+        const matching = requiredMask < counts.length ? counts[requiredMask] : 0n;
+        map.set(node, { total, matching });
+    });
+    return map;
+}
+
+function updatePathList(graph, start, target, requiredMask, maskMap, totalMatching, requiredSet, memo) {
+    const sampleLimit = 80;
+    const paths = enumeratePaths(graph, start, target, requiredMask, maskMap, sampleLimit, memo);
+    pathList.innerHTML = '';
+    if (!paths.length) {
+        pathList.innerHTML = '<li>No matching paths were found.</li>';
+    } else {
+        for (const path of paths) {
+            const li = document.createElement('li');
+            li.innerHTML = path.map(node => {
+                if (node === start) {
+                    return `<strong>${node}</strong>`;
+                }
+                if (node === target) {
+                    return `<strong>${node}</strong>`;
+                }
+                if (requiredSet.has(node)) {
+                    return `<span class="req">${node}</span>`;
+                }
+                return node;
+            }).join(' → ');
+            pathList.appendChild(li);
+        }
+    }
+    const remaining = BigInt(totalMatching ?? 0n) - BigInt(paths.length);
+    if (remaining > 0n) {
+        pathFooter.textContent = `${formatBigInt(remaining)} additional matching paths not shown.`;
+    } else {
+        pathFooter.textContent = paths.length ? 'All matching paths are listed above.' : '';
+    }
+}
+
+function enumeratePaths(graph, start, target, requiredMask, maskMap, limit, memo) {
+    const results = [];
+    const stack = [];
+    const visiting = new Set();
+    const maskFor = (node) => maskMap.get(node) ?? 0;
+    const hasMatchingCompletion = (node, inheritedMask) => {
+        const counts = memo.get(node);
+        if (!counts) return false;
+        for (let mask = 0; mask < counts.length; mask++) {
+            if (counts[mask] === 0n) continue;
+            const combined = mask | inheritedMask;
+            if ((combined & requiredMask) === requiredMask) {
+                return true;
+            }
+        }
+        return false;
+    };
+    const dfs = (node, mask) => {
+        if (results.length >= limit) return;
+        const newMask = mask | maskFor(node);
+        stack.push(node);
+        if (node === target) {
+            if ((newMask & requiredMask) === requiredMask) {
+                results.push([...stack]);
+            }
+            stack.pop();
+            return;
+        }
+        visiting.add(node);
+        const neighbors = graph.get(node) ?? [];
+        for (const dest of neighbors) {
+            if (visiting.has(dest)) {
+                continue;
+            }
+            if (!hasMatchingCompletion(dest, newMask)) {
+                continue;
+            }
+            dfs(dest, newMask);
+            if (results.length >= limit) break;
+        }
+        visiting.delete(node);
+        stack.pop();
+    };
+    dfs(start, 0);
+    return results;
+}
+
+function formatBigInt(n) {
+    const str = n.toString();
+    return str.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+function formatShare(part, total) {
+    if (total === 0n) return '–';
+    if (part === 0n) return '0%';
+    const percentage = Number((part * 10000n) / total) / 100;
+    return `${percentage.toFixed(2)}%`;
+}
+
+function drawGraph() {
+    const ctx = graphCanvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    const width = graphCanvas.clientWidth || 1000;
+    const height = graphCanvas.clientHeight || 520;
+    graphCanvas.width = width * dpr;
+    graphCanvas.height = height * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.fillStyle = '#010512';
+    ctx.fillRect(0, 0, width, height);
+    if (!lastRender) {
+        ctx.fillStyle = '#475569';
+        ctx.font = '16px system-ui';
+        ctx.fillText('Analyze a graph to render it here.', 24, 32);
+        return;
+    }
+    const { graph, start, target, requiredSet, totalsMap, reachable } = lastRender;
+    const positions = computeLayout(graph, start, reachable, width, height);
+    ctx.strokeStyle = 'rgba(148,163,184,0.35)';
+    ctx.lineWidth = 1.4;
+    positions.forEach((pos, node) => {
+        const neighbors = graph.get(node) ?? [];
+        neighbors.forEach(dest => {
+            const destPos = positions.get(dest);
+            if (!destPos) return;
+            ctx.beginPath();
+            ctx.moveTo(pos.x, pos.y);
+            ctx.lineTo(destPos.x, destPos.y);
+            ctx.stroke();
+        });
+    });
+    ctx.font = '12px system-ui';
+    positions.forEach((pos, node) => {
+        const totals = totalsMap.get(node);
+        const totalPaths = totals ? totals.total : 0n;
+        const radius = computeRadius(totalPaths);
+        const color = node === start
+            ? '#38bdf8'
+            : node === target
+                ? '#f87171'
+                : requiredSet.has(node)
+                    ? '#fbbf24'
+                    : '#94a3b8';
+        ctx.fillStyle = 'rgba(15,23,42,0.85)';
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, radius + 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+        ctx.fillStyle = '#0f172a';
+        ctx.fillText(node, pos.x - ctx.measureText(node).width / 2, pos.y - radius - 4);
+        if (totals) {
+            const label = abbreviateBigInt(totals.total);
+            ctx.fillStyle = '#94a3b8';
+            ctx.fillText(label, pos.x - ctx.measureText(label).width / 2, pos.y + radius + 10);
+        }
+    });
+}
+
+function computeLayout(graph, start, reachable, width, height) {
+    const marginX = 70;
+    const marginY = 70;
+    const depth = new Map();
+    const queue = [start];
+    depth.set(start, 0);
+    while (queue.length) {
+        const node = queue.shift();
+        const neighbors = graph.get(node) ?? [];
+        const nextDepth = depth.get(node) + 1;
+        for (const dest of neighbors) {
+            if (!reachable.has(dest)) continue;
+            if (!depth.has(dest) || nextDepth < depth.get(dest)) {
+                depth.set(dest, nextDepth);
+                queue.push(dest);
+            }
+        }
+    }
+    let maxDepth = depth.size ? Math.max(...depth.values()) : 0;
+    const layerCount = Math.max(maxDepth + 1, 1);
+    const layers = Array.from({ length: layerCount }, () => []);
+    depth.forEach((layer, node) => {
+        layers[layer].push(node);
+    });
+    reachable.forEach(node => {
+        if (!depth.has(node)) {
+            maxDepth += 1;
+            const layer = maxDepth;
+            if (!layers[layer]) layers[layer] = [];
+            layers[layer].push(node);
+            depth.set(node, layer);
+        }
+    });
+    layers.forEach(layer => layer.sort());
+    const usableWidth = Math.max(width - marginX * 2, 120);
+    const usableHeight = Math.max(height - marginY * 2, 120);
+    const positions = new Map();
+    layers.forEach((layer, idx) => {
+        if (!layer || !layer.length) return;
+        const x = layerCount === 1
+            ? width / 2
+            : marginX + (usableWidth * idx) / (layerCount - 1);
+        const step = layer.length > 1 ? usableHeight / (layer.length - 1) : 0;
+        layer.forEach((node, nodeIdx) => {
+            const y = layer.length === 1
+                ? height / 2
+                : marginY + step * nodeIdx;
+            positions.set(node, { x, y });
+        });
+    });
+    return positions;
+}
+
+function computeRadius(total) {
+    if (!total || total === 0n) return 5;
+    const digits = total.toString().length;
+    return Math.min(5 + digits * 0.4, 12);
+}
+
+function abbreviateBigInt(n) {
+    const abs = Number(n);
+    if (!Number.isFinite(abs)) {
+        const str = n.toString();
+        return str.length > 6 ? `${str.slice(0, 6)}…` : str;
+    }
+    if (abs >= 1e9) return (abs / 1e9).toFixed(1).replace(/\.0$/, '') + 'B';
+    if (abs >= 1e6) return (abs / 1e6).toFixed(1).replace(/\.0$/, '') + 'M';
+    if (abs >= 1e3) return (abs / 1e3).toFixed(1).replace(/\.0$/, '') + 'k';
+    return abs.toString();
+}
+
+window.addEventListener('resize', () => {
+    if (lastRender) {
+        drawGraph();
+    }
+});
+
+drawGraph();
+</script>
+</body>
+</html>

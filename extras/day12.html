@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Day 12 · Christmas Tree Farm Visualizer</title>
+<style>
+    :root {
+        color-scheme: dark;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: #010512;
+        color: #e2e8f0;
+    }
+    * { box-sizing: border-box; }
+    body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        padding: 2rem 1rem 3rem;
+    }
+    main {
+        width: min(1200px, 100%);
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    header h1 {
+        margin: 0;
+        font-size: clamp(1.4rem, 2vw + 1rem, 2.5rem);
+    }
+    header p {
+        margin: 0.6rem 0 0;
+        color: #94a3b8;
+        line-height: 1.6;
+    }
+    .panel {
+        background: #030a1c;
+        border-radius: 20px;
+        border: 1px solid #0f172a;
+        padding: 1.4rem;
+        box-shadow: 0 25px 55px rgba(2,6,23,0.65);
+    }
+    .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        align-items: center;
+        margin-bottom: 0.9rem;
+    }
+    button {
+        border: none;
+        border-radius: 999px;
+        padding: 0.55rem 1.2rem;
+        font-weight: 600;
+        cursor: pointer;
+        background: #38bdf8;
+        color: #02131f;
+    }
+    button.secondary {
+        background: #1e293b;
+        color: #e2e8f0;
+    }
+    button:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+    }
+    textarea {
+        width: 100%;
+        min-height: 220px;
+        border-radius: 16px;
+        border: 1px solid #1e293b;
+        background: #010717;
+        color: inherit;
+        resize: vertical;
+        padding: 0.9rem 1rem;
+        font-family: "JetBrains Mono", "SFMono-Regular", ui-monospace, "Cascadia Code", monospace;
+        font-size: 0.95rem;
+        line-height: 1.4;
+    }
+    .status {
+        font-size: 0.95rem;
+        color: #94a3b8;
+        margin-top: 0.65rem;
+    }
+    .status.error {
+        color: #f87171;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 0.5rem;
+        font-size: 0.95rem;
+    }
+    th, td {
+        text-align: left;
+        padding: 0.55rem 0.45rem;
+        border-bottom: 1px solid rgba(148,163,184,0.2);
+    }
+    th {
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #94a3b8;
+    }
+    tbody tr {
+        cursor: pointer;
+    }
+    tbody tr:hover {
+        background: rgba(56,189,248,0.08);
+    }
+    tbody tr.selected {
+        background: rgba(56,189,248,0.15);
+    }
+    canvas {
+        width: 100%;
+        max-width: 640px;
+        border-radius: 18px;
+        border: 1px solid #111c2f;
+        background: #010612;
+    }
+    .viz-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.2rem;
+        align-items: flex-start;
+    }
+    .legend {
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+        font-size: 0.9rem;
+        color: #94a3b8;
+    }
+    .legend strong {
+        color: #f8fafc;
+    }
+    .legend span {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+    .swatch {
+        width: 18px;
+        height: 18px;
+        border-radius: 4px;
+    }
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1rem;
+        margin-top: 0.8rem;
+    }
+    .stat {
+        background: #040b1c;
+        border-radius: 16px;
+        padding: 1rem 1.1rem;
+        border: 1px solid #0f172a;
+    }
+    .stat h2 {
+        margin: 0;
+        font-size: 0.95rem;
+        color: #94a3b8;
+    }
+    .stat p {
+        margin: 0.3rem 0 0;
+        font-variant-numeric: tabular-nums;
+        font-size: 1.2rem;
+    }
+</style>
+</head>
+<body>
+<main>
+    <header>
+        <h1>Day 12 · Christmas Tree Farm Visualizer</h1>
+        <p>
+            Paste the puzzle input (shapes followed by regions) and analyze whether each region can fit its required presents.
+            Click a region in the table to see a concrete packing on the right; pieces are rotated/flipped as needed.
+        </p>
+    </header>
+
+    <section class="panel">
+        <div class="controls">
+            <button type="button" id="loadExample" class="secondary">Load Example</button>
+            <button type="button" id="loadPuzzle" class="secondary">Load Puzzle Input</button>
+            <button type="button" id="analyze">Analyze Regions</button>
+            <span id="analysisTime">–</span>
+        </div>
+        <input type="file" id="filePicker" accept=".txt" style="display:none"/>
+        <textarea id="input" spellcheck="false" placeholder="0:\n###\n##.\n##.\n\n...\n\n12x5: 1 0 1 0 2 2"></textarea>
+        <div class="status" id="status">Paste the full puzzle text or load it from disk.</div>
+    </section>
+
+    <section class="panel">
+        <div class="summary-grid">
+            <div class="stat">
+                <h2>Total regions</h2>
+                <p id="regionCount">–</p>
+            </div>
+            <div class="stat">
+                <h2>Regions that fit all presents</h2>
+                <p id="fitCount">–</p>
+            </div>
+            <div class="stat">
+                <h2>Computation time</h2>
+                <p id="timeStat">–</p>
+            </div>
+        </div>
+        <div style="overflow-x:auto;margin-top:1rem;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Region</th>
+                        <th>Presents</th>
+                        <th>Fits?</th>
+                    </tr>
+                </thead>
+                <tbody id="regionTable">
+                    <tr><td colspan="4" style="text-align:center;color:#94a3b8;">Analyze the input to populate this table.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="panel">
+        <div class="viz-container">
+            <canvas id="boardCanvas" width="640" height="480"></canvas>
+            <div class="legend" id="legend">
+                <strong>Select a region to visualize</strong>
+            </div>
+        </div>
+    </section>
+</main>
+
+<script>
+const textarea = document.getElementById('input');
+const statusEl = document.getElementById('status');
+const regionTable = document.getElementById('regionTable');
+const boardCanvas = document.getElementById('boardCanvas');
+const legendEl = document.getElementById('legend');
+const regionCountEl = document.getElementById('regionCount');
+const fitCountEl = document.getElementById('fitCount');
+const timeStatEl = document.getElementById('timeStat');
+const analysisTimeEl = document.getElementById('analysisTime');
+const filePicker = document.getElementById('filePicker');
+
+let currentResults = [];
+let selectedRegionIndex = null;
+
+const exampleInput = `0:
+###
+##.
+##.
+
+1:
+###
+##.
+.##
+
+2:
+.##
+###
+##.
+
+3:
+##.
+###
+##.
+
+4:
+###
+#..
+###
+
+5:
+###
+.#.
+###
+
+4x4: 0 0 0 0 2 0
+12x5: 1 0 1 0 2 2
+12x5: 1 0 1 0 3 2`;
+
+document.getElementById('loadExample').addEventListener('click', () => {
+    textarea.value = exampleInput;
+    setStatus('Loaded example input.', false);
+});
+
+document.getElementById('loadPuzzle').addEventListener('click', async () => {
+    setStatus('Loading ../inputs/day12.txt …', false);
+    try {
+        const resp = await fetch('../inputs/day12.txt', { cache: 'no-store' });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        textarea.value = await resp.text();
+        setStatus('Loaded puzzle input.', false);
+    } catch (err) {
+        if (window.location.protocol === 'file:') {
+            setStatus('Browser blocked file:// fetch; choose the file manually.', true);
+            filePicker.click();
+        } else {
+            setStatus(`Failed to load puzzle input: ${err.message}`, true);
+        }
+    }
+});
+
+filePicker.addEventListener('change', async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    try {
+        const text = await file.text();
+        textarea.value = text;
+        setStatus(`Loaded ${file.name}.`, false);
+    } catch (err) {
+        setStatus(`Failed to read file: ${err.message}`, true);
+    } finally {
+        filePicker.value = '';
+    }
+});
+
+document.getElementById('analyze').addEventListener('click', () => {
+    try {
+        analyze();
+    } catch (err) {
+        console.error(err);
+        setStatus(err.message || 'Unexpected error', true);
+    }
+});
+
+function setStatus(message, isError) {
+    statusEl.textContent = message;
+    statusEl.classList.toggle('error', Boolean(isError));
+}
+
+function analyze() {
+    const raw = textarea.value;
+    if (!raw.trim()) {
+        throw new Error('Please paste the puzzle input first.');
+    }
+    const t0 = performance.now();
+    const puzzle = parseInput(raw);
+    const results = puzzle.regions.map((region, index) => {
+        const start = performance.now();
+        const solution = solveRegion(puzzle.shapes, region);
+        return {
+            index,
+            region,
+            fits: solution !== null,
+            solution,
+            duration: performance.now() - start,
+        };
+    });
+    currentResults = results;
+    populateTable(results, puzzle.shapes.length);
+    const totalFits = results.filter(r => r.fits).length;
+    regionCountEl.textContent = results.length.toString();
+    fitCountEl.textContent = totalFits.toString();
+    const totalMs = performance.now() - t0;
+    timeStatEl.textContent = `${totalMs.toFixed(1)} ms`;
+    analysisTimeEl.textContent = `${totalMs.toFixed(1)} ms`;
+    setStatus('Analysis complete. Click a region to visualize.', false);
+    if (results.length) {
+        selectRegion(0);
+    } else {
+        selectedRegionIndex = null;
+        drawPlaceholder();
+    }
+}
+
+function parseInput(text) {
+    const shapes = [];
+    const regions = [];
+    let readingShapes = true;
+    let currentId = null;
+    let currentRows = [];
+    const regionLinePattern = /^\s*\d+\s*x\s*\d+\s*:/i;
+    for (const rawLine of text.split(/\r?\n/)) {
+        const line = rawLine.trimEnd();
+        if (!line.trim()) continue;
+        if (readingShapes) {
+            const match = line.match(/^\s*(\d+)\s*:\s*$/);
+            if (match) {
+                if (currentId !== null) {
+                    shapes.push(buildShape(currentId, currentRows));
+                    currentRows = [];
+                }
+                currentId = Number(match[1]);
+                continue;
+            }
+            if (regionLinePattern.test(line)) {
+                if (currentId !== null) {
+                    shapes.push(buildShape(currentId, currentRows));
+                    currentRows = [];
+                    currentId = null;
+                }
+                readingShapes = false;
+                regions.push(parseRegion(line));
+                continue;
+            }
+            if (currentId === null) {
+                throw new Error('Encountered shape rows before a shape id header.');
+            }
+            currentRows.push(line.trimEnd());
+        } else {
+            if (!regionLinePattern.test(line)) {
+                throw new Error(`Invalid region line: ${line}`);
+            }
+            regions.push(parseRegion(line));
+        }
+    }
+    if (currentId !== null) {
+        shapes.push(buildShape(currentId, currentRows));
+    }
+    shapes.sort((a, b) => a.id - b.id);
+    shapes.forEach((shape, idx) => {
+        if (shape.id !== idx) {
+            throw new Error('Shape indices must be contiguous starting at 0.');
+        }
+    });
+    const shapeCount = shapes.length;
+    regions.forEach(region => {
+        if (region.requirements.length < shapeCount) {
+            while (region.requirements.length < shapeCount) region.requirements.push(0);
+        } else if (region.requirements.length > shapeCount) {
+            throw new Error('Region requirement list longer than number of shapes.');
+        }
+    });
+    return { shapes, regions };
+}
+
+function buildShape(id, rows) {
+    if (!rows.length) {
+        throw new Error(`Shape ${id} has no rows.`);
+    }
+    const cells = [];
+    rows.forEach((row, y) => {
+        [...row].forEach((ch, x) => {
+            if (ch === '#') cells.push({ x, y });
+        });
+    });
+    if (!cells.length) {
+        throw new Error(`Shape ${id} must have at least one cell.`);
+    }
+    const variants = generateVariants(cells);
+    return { id, cells, variants };
+}
+
+function normalizeCells(cells) {
+    const minX = Math.min(...cells.map(c => c.x));
+    const minY = Math.min(...cells.map(c => c.y));
+    return cells
+        .map(({ x, y }) => ({ x: x - minX, y: y - minY }))
+        .sort((a, b) => (a.y - b.y) || (a.x - b.x));
+}
+
+function rotateCells(cells) {
+    return cells.map(({ x, y }) => ({ x: -y, y: x }));
+}
+
+function reflectCells(cells) {
+    return cells.map(({ x, y }) => ({ x: -x, y }));
+}
+
+function generateVariants(baseCells) {
+    const variants = [];
+    const seen = new Set();
+    let current = baseCells.map(cell => ({ ...cell }));
+    for (let rot = 0; rot < 4; rot++) {
+        if (rot > 0) current = rotateCells(current);
+        for (let flip = 0; flip < 2; flip++) {
+            const transformed = flip === 0 ? current : reflectCells(current);
+            const normalized = normalizeCells(transformed);
+            const key = normalized.map(({ x, y }) => `${x},${y}`).join(';');
+            if (seen.has(key)) continue;
+            seen.add(key);
+            const width = Math.max(...normalized.map(c => c.x)) + 1;
+            const height = Math.max(...normalized.map(c => c.y)) + 1;
+            variants.push({ width, height, cells: normalized });
+        }
+    }
+    variants.sort((a, b) =>
+        a.height - b.height || a.width - b.width || compareCells(a.cells, b.cells)
+    );
+    return variants;
+}
+
+function compareCells(a, b) {
+    for (let i = 0; i < Math.min(a.length, b.length); i++) {
+        const cmp = a[i].y - b[i].y || a[i].x - b[i].x;
+        if (cmp !== 0) return cmp;
+    }
+    return a.length - b.length;
+}
+
+function parseRegion(line) {
+    const [size, rest] = line.split(':');
+    if (!rest) throw new Error(`Invalid region line: ${line}`);
+    const [wStr, hStr] = size.split('x');
+    if (hStr === undefined) throw new Error(`Invalid region size: ${size}`);
+    const width = Number(wStr.trim());
+    const height = Number(hStr.trim());
+    if (!Number.isFinite(width) || !Number.isFinite(height)) {
+        throw new Error(`Invalid region size: ${size}`);
+    }
+    const requirements = rest
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean)
+        .map(v => Number(v));
+    return { width, height, requirements };
+}
+
+function solveRegion(shapes, region) {
+    const pieces = [];
+    region.requirements.forEach((count, idx) => {
+        for (let i = 0; i < count; i++) pieces.push(idx);
+    });
+    if (!pieces.length) {
+        return { placements: [], width: region.width, height: region.height };
+    }
+    const areaNeeded = pieces.reduce((acc, idx) => acc + shapes[idx].cells.length, 0);
+    if (areaNeeded > region.width * region.height) {
+        return null;
+    }
+    const placements = precomputePlacements(shapes, region);
+    for (const idx of pieces) {
+        if (!placements[idx] || !placements[idx].length) {
+            return null;
+        }
+    }
+    pieces.sort((a, b) => placements[a].length - placements[b].length);
+    const board = new BitBoard(region.width * region.height);
+    const selection = new Array(pieces.length);
+    const success = backtrack(0);
+    if (!success) return null;
+    return {
+        placements: selection.slice(),
+        width: region.width,
+        height: region.height,
+    };
+
+    function backtrack(idx) {
+        if (idx === pieces.length) return true;
+        const shapeIdx = pieces[idx];
+        for (const placement of placements[shapeIdx]) {
+            if (board.canPlace(placement.bits)) {
+                board.apply(placement.bits);
+                selection[idx] = { shapeIdx, placement };
+                if (backtrack(idx + 1)) return true;
+                board.remove(placement.bits);
+            }
+        }
+        return false;
+    }
+}
+
+function precomputePlacements(shapes, region) {
+    const totalBits = region.width * region.height;
+    const len = BitBoard.bitsLen(totalBits);
+    return shapes.map((shape, idx) => {
+        const entries = [];
+        shape.variants.forEach(variant => {
+            if (variant.width > region.width || variant.height > region.height) return;
+            const maxX = region.width - variant.width;
+            const maxY = region.height - variant.height;
+            for (let oy = 0; oy <= maxY; oy++) {
+                for (let ox = 0; ox <= maxX; ox++) {
+                    const bits = new Array(len).fill(0n);
+                    const cells = [];
+                    let valid = true;
+                    for (const cell of variant.cells) {
+                        const x = ox + cell.x;
+                        const y = oy + cell.y;
+                        const index = y * region.width + x;
+                        const word = Math.floor(index / 64);
+                        const bit = BigInt(1) << BigInt(index % 64);
+                        if (bits[word] & bit) {
+                            valid = false;
+                            break;
+                        }
+                        bits[word] |= bit;
+                        cells.push({ x, y });
+                    }
+                    if (valid) entries.push({ bits, cells, variant });
+                }
+            }
+        });
+        return entries;
+    });
+}
+
+class BitBoard {
+    constructor(size) {
+        this.bits = new Array(BitBoard.bitsLen(size)).fill(0n);
+    }
+    static bitsLen(size) {
+        return Math.ceil(size / 64);
+    }
+    canPlace(bits) {
+        for (let i = 0; i < this.bits.length; i++) {
+            if ((this.bits[i] & bits[i]) !== 0n) return false;
+        }
+        return true;
+    }
+    apply(bits) {
+        for (let i = 0; i < this.bits.length; i++) {
+            this.bits[i] |= bits[i];
+        }
+    }
+    remove(bits) {
+        for (let i = 0; i < this.bits.length; i++) {
+            this.bits[i] &= ~bits[i];
+        }
+    }
+}
+
+function populateTable(results, shapeCount) {
+    regionTable.innerHTML = '';
+    if (!results.length) {
+        regionTable.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#94a3b8;">No regions parsed.</td></tr>';
+        return;
+    }
+    results.forEach(result => {
+        const tr = document.createElement('tr');
+        tr.dataset.index = result.index;
+        tr.addEventListener('click', () => selectRegion(result.index));
+        const reqSummary = summarizeRequirements(result.region.requirements);
+        tr.innerHTML = `
+            <td>${result.index + 1}</td>
+            <td>${result.region.width}×${result.region.height}</td>
+            <td>${reqSummary}</td>
+            <td style="color:${result.fits ? '#4ade80' : '#f87171'}">${result.fits ? 'Fits' : 'No'}</td>
+        `;
+        regionTable.appendChild(tr);
+    });
+}
+
+function summarizeRequirements(reqs) {
+    const parts = [];
+    reqs.forEach((count, idx) => {
+        if (count) parts.push(`${count}×shape ${idx}`);
+    });
+    return parts.length ? parts.join(', ') : 'None';
+}
+
+function selectRegion(index) {
+    selectedRegionIndex = index;
+    [...regionTable.querySelectorAll('tr')].forEach(row => {
+        row.classList.toggle('selected', Number(row.dataset.index) === index);
+    });
+    const result = currentResults[index];
+    if (!result) {
+        drawPlaceholder();
+        return;
+    }
+    if (!result.fits) {
+        drawNoSolution(result.region);
+    } else {
+        drawSolution(result.solution, result.region);
+    }
+}
+
+function drawPlaceholder() {
+    const ctx = boardCanvas.getContext('2d');
+    ctx.fillStyle = '#010612';
+    ctx.fillRect(0, 0, boardCanvas.width, boardCanvas.height);
+    ctx.fillStyle = '#475569';
+    ctx.font = '18px system-ui';
+    ctx.fillText('Run an analysis and select a region to render.', 24, 32);
+    legendEl.innerHTML = '<strong>Select a region to visualize</strong>';
+}
+
+function drawNoSolution(region) {
+    const ctx = boardCanvas.getContext('2d');
+    ctx.fillStyle = '#010612';
+    ctx.fillRect(0, 0, boardCanvas.width, boardCanvas.height);
+    ctx.fillStyle = '#f87171';
+    ctx.font = '20px system-ui';
+    ctx.fillText(`No arrangement fits ${region.width}×${region.height}.`, 24, 32);
+    legendEl.innerHTML = '<strong>No valid arrangement for this region.</strong>';
+}
+
+function drawSolution(solution, region) {
+    const ctx = boardCanvas.getContext('2d');
+    ctx.fillStyle = '#010612';
+    ctx.fillRect(0, 0, boardCanvas.width, boardCanvas.height);
+    const gridPadding = 24;
+    const cellSize = Math.min(
+        48,
+        Math.floor((boardCanvas.width - gridPadding * 2) / region.width),
+        Math.floor((boardCanvas.height - gridPadding * 2) / region.height)
+    );
+    const originX = Math.floor((boardCanvas.width - cellSize * region.width) / 2);
+    const originY = Math.floor((boardCanvas.height - cellSize * region.height) / 2);
+
+    const colors = generateColors(solution.placements.length);
+    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const grid = Array.from({ length: region.height }, () => Array(region.width).fill('.'));
+
+    solution.placements.forEach((entry, idx) => {
+        const label = letters[idx % letters.length];
+        entry.placement.cells.forEach(({ x, y }) => {
+            grid[y][x] = label;
+            ctx.fillStyle = colors[idx];
+            ctx.fillRect(originX + x * cellSize, originY + y * cellSize, cellSize, cellSize);
+        });
+    });
+
+    ctx.strokeStyle = 'rgba(148,163,184,0.5)';
+    ctx.lineWidth = 1;
+    for (let x = 0; x <= region.width; x++) {
+        ctx.beginPath();
+        ctx.moveTo(originX + x * cellSize + 0.5, originY + 0.5);
+        ctx.lineTo(originX + x * cellSize + 0.5, originY + region.height * cellSize + 0.5);
+        ctx.stroke();
+    }
+    for (let y = 0; y <= region.height; y++) {
+        ctx.beginPath();
+        ctx.moveTo(originX + 0.5, originY + y * cellSize + 0.5);
+        ctx.lineTo(originX + region.width * cellSize + 0.5, originY + y * cellSize + 0.5);
+        ctx.stroke();
+    }
+
+    legendEl.innerHTML = '<strong>Pieces in this arrangement</strong>';
+    solution.placements.forEach((entry, idx) => {
+        const span = document.createElement('span');
+        span.innerHTML = `<span class="swatch" style="background:${colors[idx]};"></span> piece ${idx + 1} (shape ${entry.shapeIdx})`;
+        legendEl.appendChild(span);
+    });
+}
+
+function generateColors(count) {
+    const colors = [];
+    for (let i = 0; i < count; i++) {
+        const hue = (i * 57) % 360;
+        colors.push(`hsl(${hue}deg 70% 55%)`);
+    }
+    return colors;
+}
+
+drawPlaceholder();
+</script>
+</body>
+</html>
